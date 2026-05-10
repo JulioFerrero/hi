@@ -1,2 +1,3 @@
-export { PageRenderer, ElementRenderer, buildTree, renderStyles } from "./renderer";
-export type { RenderElement } from "./renderer";
+export { PageRenderer, ElementRenderer, buildTree, classesFromStyles, inlineStylesFromTokens } from "./renderer";
+export type { RenderElement, ElementProps } from "./lib/types";
+export { COMPONENT_REGISTRY, hasComponent } from "./components";

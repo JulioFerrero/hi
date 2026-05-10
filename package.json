@@ -3,7 +3,11 @@
   "private": true,
   "scripts": {
     "dev:web": "turbo dev --filter=@wb/web",
-    "dev:editor": "turbo dev --filter=@wb/editor",
+    "dev:editor": "turbo dev --filter=@wb/editor-app",
+    "build:web": "turbo build --filter=@wb/web",
+    "build:editor": "turbo build --filter=@wb/editor-app",
+    "start:web": "turbo start --filter=@wb/web",
+    "start:editor": "turbo start --filter=@wb/editor-app",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
