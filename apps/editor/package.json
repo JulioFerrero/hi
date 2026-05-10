@@ -1,0 +1,42 @@
+{
+  "name": "@wb/editor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.0.0-beta.1",
+    "@hookform/resolvers": "^5.0.0",
+    "@tldraw/tldraw": "^3.13.0",
+    "@wb/api": "workspace:*",
+    "@wb/cms": "workspace:*",
+    "@wb/database": "workspace:*",
+    "@wb/types": "workspace:*",
+    "@wb/ui": "workspace:*",
+    "@wb/utils": "workspace:*",
+    "@wb/website": "workspace:*",
+    "hono": "^4.12.0",
+    "immer": "^10.1.0",
+    "lucide-react": "^0.509.0",
+    "nanoid": "^5.1.5",
+    "next": "^16.2.0",
+    "react": "^19.1.0",
+    "react-arborist": "^3.6.0",
+    "react-dom": "^19.1.0",
+    "react-hook-form": "^7.55.0",
+    "zod": "^3.24.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.8.0"
+  }
+}

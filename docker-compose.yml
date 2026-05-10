@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: wb-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: webbuilder
+      POSTGRES_PASSWORD: webbuilder
+      POSTGRES_DB: webbuilder
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webbuilder -d webbuilder"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

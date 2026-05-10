@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-webbuilder}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-webbuilder}
+      POSTGRES_DB: ${POSTGRES_DB:-webbuilder}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-webbuilder} -d ${POSTGRES_DB:-webbuilder}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  web:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-webbuilder}:${POSTGRES_PASSWORD:-webbuilder}@postgres:5432/${POSTGRES_DB:-webbuilder}
+      WEBSITE_ID: ${WEBSITE_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+  editor:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.editor
+    restart: unless-stopped
+    ports:
+      - "${EDITOR_PORT:-3001}:3001"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-webbuilder}:${POSTGRES_PASSWORD:-webbuilder}@postgres:5432/${POSTGRES_DB:-webbuilder}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+
+volumes:
+  pgdata:
+
+networks:
+  internal:
