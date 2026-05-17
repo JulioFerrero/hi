@@ -1,3 +1,4 @@
 @import "tailwindcss";
 @import "@hi/editor/styles.css";
-@import "@hi/website/styles.css";
+@import "@fontsource/fraunces/index.css";
+@import "@fontsource/recursive/index.css";

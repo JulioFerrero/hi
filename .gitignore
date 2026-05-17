@@ -8,3 +8,4 @@ dist
 .env*.local
 _tw_gen.css
 **/_fresh/
+apps/web/_fresh/*

@@ -89,6 +89,8 @@ export default defineConfig({
       { find: "react-dom", replacement: "preact/compat" },
       { find: "react", replacement: "preact/compat" },
       { find: "lucide-react", replacement: resolve(import.meta.dirname, "lucide-icons.ts") },
+      { find: "@fontsource/fraunces", replacement: resolve(root, "node_modules/@fontsource/fraunces") },
+      { find: "@fontsource/recursive", replacement: resolve(root, "node_modules/@fontsource/recursive") },
       { find: "@hi/editor/styles.css", replacement: resolve(root, "packages/editor/src/styles.css") },
       { find: "@hi/website/styles.css", replacement: resolve(root, "packages/website/src/styles.css") },
       { find: "@hi/api", replacement: resolve(root, "packages/api/src/index.ts") },

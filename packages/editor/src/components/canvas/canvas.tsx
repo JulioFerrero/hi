@@ -322,6 +322,7 @@ export function Canvas() {
       >
         <div ref={contentRef} className="absolute" style={{ willChange: "transform" }}>
           <div
+            data-canvas-root
             className="bg-white rounded-xl shadow-[0_2px_20px_rgba(0,0,0,0.3)]"
             style={{ width: `${pageWidth}px`, minHeight: "800px", transition: "width 0.3s ease" }}
           >

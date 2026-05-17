@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useEditorStore } from "../stores";
 
 const loadedClasses = new Set<string>();
 let pendingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -15,6 +14,13 @@ function collectClasses(root: HTMLElement): string[] {
   return [...classes];
 }
 
+function scopeCSS(css: string): string {
+  return css
+    .replace(/:root\s*,\s*:host/g, "[data-canvas-root]")
+    .replace(/:root(?=\s*[{,])/g, "[data-canvas-root]")
+    .replace(/:host(?=\s*[{,])/g, "[data-canvas-root]");
+}
+
 async function fetchAndInjectCSS(classes: string[]) {
   const newClasses = classes.filter((c) => !loadedClasses.has(c));
   if (newClasses.length === 0) return;
@@ -25,8 +31,10 @@ async function fetchAndInjectCSS(classes: string[]) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ classes: newClasses }),
     });
-    const css = await res.text();
-    if (!css) return;
+    const raw = await res.text();
+    if (!raw) return;
+
+    const css = scopeCSS(raw);
 
     let style = document.getElementById("tw-dynamic") as HTMLStyleElement | null;
     if (!style) {

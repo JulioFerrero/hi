@@ -1,6 +1,7 @@
 const cssCache = new Map<string, string>();
 
 const THEME_PATH = new URL("../theme.css", import.meta.url).pathname;
+const STYLES_PATH = new URL("../styles.css", import.meta.url).pathname;
 
 async function runTailwind(inputPath: string): Promise<string> {
   const cmd = new Deno.Command(Deno.execPath(), {
@@ -12,12 +13,12 @@ async function runTailwind(inputPath: string): Promise<string> {
   return new TextDecoder().decode(output.stdout);
 }
 
-async function generateCSS(classes: string[], genPath: string): Promise<string> {
-  const key = classes.join(" ");
+async function generateCSS(classes: string[], genPath: string, themePath: string): Promise<string> {
+  const key = themePath + "|" + classes.join(" ");
   const cached = cssCache.get(key);
   if (cached) return cached;
 
-  const source = `@import "tailwindcss";\n@import "${THEME_PATH}";\n@source inline("${classes.join(" ")}");`;
+  const source = `@import "tailwindcss";\n@import "${themePath}";\n@source inline("${classes.join(" ")}");`;
   await Deno.writeTextFile(genPath, source);
 
   const css = await runTailwind(genPath);
@@ -41,10 +42,11 @@ function extractClasses(html: string): string[] {
 export function tailwindCssResponse(classes: string[], genPath = "_tw_gen.css"): Promise<string> {
   const sorted = [...new Set(classes)].sort();
   if (sorted.length === 0) return Promise.resolve("");
-  return generateCSS(sorted, genPath);
+  return generateCSS(sorted, genPath, THEME_PATH);
 }
 
-export function tailwindHtmlMiddleware(genPath = "_tw_gen.css") {
+export function tailwindHtmlMiddleware(options?: { fonts?: boolean }) {
+  const themePath = options?.fonts ? STYLES_PATH : THEME_PATH;
   return async (_ctx: unknown, next: () => Promise<Response>): Promise<Response> => {
     const response = await next();
 
@@ -57,7 +59,7 @@ export function tailwindHtmlMiddleware(genPath = "_tw_gen.css") {
       return new Response(html, { headers: response.headers, status: response.status });
     }
 
-    const css = await generateCSS(classes, genPath);
+    const css = await generateCSS(classes, "_tw_gen.css", themePath);
     const injected = html.replace("</head>", `<style>${css}</style>`);
     return new Response(injected, { headers: response.headers, status: response.status });
   };
