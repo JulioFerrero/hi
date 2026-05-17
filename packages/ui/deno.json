@@ -1,0 +1,27 @@
+{
+  "name": "@hi/ui",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./button": "./src/components/button.tsx",
+    "./input": "./src/components/input.tsx",
+    "./dialog": "./src/components/dialog.tsx",
+    "./select": "./src/components/select.tsx",
+    "./tabs": "./src/components/tabs.tsx",
+    "./menu": "./src/components/menu.tsx",
+    "./popover": "./src/components/popover.tsx",
+    "./tooltip": "./src/components/tooltip.tsx",
+    "./toast": "./src/components/toast.tsx",
+    "./scroll-area": "./src/components/scroll-area.tsx",
+    "./separator": "./src/components/separator.tsx",
+    "./switch": "./src/components/switch.tsx",
+    "./collapsible": "./src/components/collapsible.tsx",
+    "./context-menu": "./src/components/context-menu.tsx",
+    "./toolbar": "./src/components/toolbar.tsx",
+    "./field": "./src/components/field.tsx",
+    "./badge": "./src/components/badge.tsx",
+    "./card": "./src/components/card.tsx",
+    "./skeleton": "./src/components/skeleton.tsx",
+    "./styles.css": "./src/styles/source.css"
+  }
+}

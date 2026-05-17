@@ -1,0 +1,37 @@
+{
+  "name": "@hi/web",
+  "version": "0.1.0",
+  "exports": { ".": "./main.ts" },
+  "tasks": {
+    "dev": "deno run -A --env=../../.env npm:vite",
+    "build": "vite build",
+    "start": "deno serve -A --env=../../.env _fresh/server.js"
+  },
+  "imports": {
+    "@/": "./",
+    "fresh": "jsr:@fresh/core@^2.3.3",
+    "preact": "npm:preact@^10.29.1",
+    "@preact/signals": "npm:@preact/signals@^2.9.0",
+    "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.1.2",
+    "vite": "npm:vite@^7.1.3",
+    "react": "npm:preact@^10.29.1/compat",
+    "react-dom": "npm:preact@^10.29.1/compat",
+    "react/jsx-runtime": "npm:preact@^10.29.1/jsx-runtime",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.0",
+    "tailwindcss": "npm:tailwindcss@^4.1.0",
+    "lucide-preact": "npm:lucide-preact@^0.509.0",
+    "@hi/website": "../../packages/website/deno.json",
+    "@hi/api": "../../packages/api/deno.json",
+    "@hi/database": "../../packages/database/deno.json",
+    "@hi/types": "../../packages/types/deno.json",
+    "@hi/utils": "../../packages/utils/deno.json"
+  },
+  "compilerOptions": {
+    "lib": ["dom", "dom.asynciterable", "dom.iterable", "deno.ns"],
+    "jsx": "precompile",
+    "jsxImportSource": "preact",
+    "jsxPrecompileSkipElements": ["a","img","source","body","html","head","title","meta","script","link","style","base","noscript","template"],
+    "types": ["vite/client"]
+  },
+  "exclude": ["**/_fresh/*"]
+}

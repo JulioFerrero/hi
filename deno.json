@@ -1,0 +1,31 @@
+{
+  "workspace": ["apps/*", "packages/*"],
+  "unstable": [
+    "bare-node-builtins",
+    "detect-cjs",
+    "node-globals",
+    "unsafe-proto",
+    "sloppy-imports"
+  ],
+  "tasks": {
+    "dev:web": "cd apps/web && deno task dev",
+    "dev:editor": "cd apps/editor && deno task dev",
+    "build:web": "cd apps/web && deno task build",
+    "build:editor": "cd apps/editor && deno task build",
+    "build": "deno task build:web && deno task build:editor",
+    "check": "deno check packages/*/src/index.ts",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "example:fresh": "deno task -c examples/fresh/deno.json dev",
+    "example:nextjs-web": "cd examples/nextjs-web && npx next dev --port 3000",
+    "example:nextjs-editor": "cd examples/nextjs-editor && npx next dev --port 3001",
+    "example:vite": "cd examples/vite-react && npx vite"
+  },
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "deno.ns"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  }
+}

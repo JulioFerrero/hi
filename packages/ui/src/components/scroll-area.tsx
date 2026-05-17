@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
-import { cn } from "@wb/utils";
+import { cn } from "@hi/utils";
 
 const ScrollArea = React.forwardRef<
   HTMLDivElement,

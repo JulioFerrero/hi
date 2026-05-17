@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Field as FieldPrimitive } from "@base-ui/react/field";
-import { cn } from "@wb/utils";
+import { cn } from "@hi/utils";
 
 const Field = React.forwardRef<
   HTMLDivElement,

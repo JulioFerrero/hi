@@ -1,10 +1,3 @@
-import { config } from "dotenv";
-import { fileURLToPath } from "url";
-import { dirname, resolve } from "path";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dirname, "../../../.env") });
-
 async function main() {
   const { db } = await import("./client");
   const { sites, pages, elements } = await import("./schema");
@@ -14,7 +7,7 @@ async function main() {
   if (existing.length > 0) {
     console.log("Database already seeded. Truncate first if you want to re-seed.");
     console.log(`SITE_ID=${existing[0]!.id}`);
-    process.exit(0);
+    Deno.exit(0);
   }
 
   console.log("Seeding...");
@@ -145,10 +138,10 @@ async function main() {
   console.log("  Pages: Home (/), About (/about), Contact (/contact)");
   console.log("  Elements: ~50 atomic elements (sections, headings, text, buttons, grids, links)");
   console.log("\nAdd SITE_ID to your .env files.");
-  process.exit(0);
+  Deno.exit(0);
 }
 
 main().catch((err) => {
   console.error("Seed failed:", err);
-  process.exit(1);
+  Deno.exit(1);
 });

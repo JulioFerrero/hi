@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { db } from "@wb/database";
-import { files } from "@wb/database";
+import { db } from "@hi/database";
+import { files } from "@hi/database";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 

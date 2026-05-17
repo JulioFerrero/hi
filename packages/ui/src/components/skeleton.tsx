@@ -1,4 +1,4 @@
-import { cn } from "@wb/utils";
+import { cn } from "@hi/utils";
 
 function Skeleton({
   className,

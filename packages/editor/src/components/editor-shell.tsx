@@ -7,7 +7,7 @@ import { Canvas } from "./canvas/canvas";
 
 export function EditorShell({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="flex h-screen flex-col bg-white">
+    <div className="flex h-screen flex-col bg-background">
       <TopBar />
       <div className="flex flex-1 overflow-hidden">
         <LeftPanel />

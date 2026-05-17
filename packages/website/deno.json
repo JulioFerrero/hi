@@ -1,0 +1,10 @@
+{
+  "name": "@hi/website",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css",
+    "./elements/tokens": "./src/elements/tokens.ts",
+    "./elements": "./src/elements/index.ts"
+  }
+}

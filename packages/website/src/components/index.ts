@@ -1,24 +1,34 @@
 import React from "react";
 import type { ComponentType } from "react";
 import type { ElementProps } from "../lib/types";
+import { Section } from "./section";
+import { Row } from "./row";
+import { Column } from "./column";
+import { Grid } from "./grid";
+import { Heading } from "./heading";
+import { Text } from "./text";
+import { Image } from "./image";
+import { Button } from "./button";
+import { Link } from "./link";
+import { Spacer } from "./spacer";
+import { Divider } from "./divider";
+import { Video } from "./video";
+import { Html } from "./html";
 
-const lazy = (load: () => Promise<Record<string, ComponentType<ElementProps>>>, name: string) =>
-  React.lazy(() => load().then((m) => ({ default: m[name]! })));
-
-export const COMPONENT_REGISTRY: Record<string, React.LazyExoticComponent<ComponentType<ElementProps>>> = {
-  section: lazy(() => import("./section"), "Section"),
-  row: lazy(() => import("./row"), "Row"),
-  column: lazy(() => import("./column"), "Column"),
-  grid: lazy(() => import("./grid"), "Grid"),
-  heading: lazy(() => import("./heading"), "Heading"),
-  text: lazy(() => import("./text"), "Text"),
-  image: lazy(() => import("./image"), "Image"),
-  button: lazy(() => import("./button"), "Button"),
-  link: lazy(() => import("./link"), "Link"),
-  spacer: lazy(() => import("./spacer"), "Spacer"),
-  divider: lazy(() => import("./divider"), "Divider"),
-  video: lazy(() => import("./video"), "Video"),
-  html: lazy(() => import("./html"), "Html"),
+export const COMPONENT_REGISTRY: Record<string, ComponentType<ElementProps>> = {
+  section: Section,
+  row: Row,
+  column: Column,
+  grid: Grid,
+  heading: Heading,
+  text: Text,
+  image: Image,
+  button: Button,
+  link: Link,
+  spacer: Spacer,
+  divider: Divider,
+  video: Video,
+  html: Html,
 };
 
 export function hasComponent(type: string): boolean {

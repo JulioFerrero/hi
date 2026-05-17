@@ -1,4 +1,4 @@
-import type { ElementData, ElementStyles } from "@wb/database/schema";
+import type { ElementData, ElementStyles } from "@hi/database/schema";
 
 export interface RenderElement {
   id: string;

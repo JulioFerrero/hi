@@ -95,19 +95,11 @@ export function createEditorActions(api: EditorApi, schema: EditorSchema) {
       return element;
     },
 
-    async updateElementData(id: string, data: Record<string, unknown>) {
-      await api.fetch(`/elements/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ data }),
-      });
+    updateElementData(id: string, data: Record<string, unknown>) {
       store.getState().updateElement(id, { data: data as any });
     },
 
-    async updateElementStyles(id: string, styles: Record<string, unknown>) {
-      await api.fetch(`/elements/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ styles }),
-      });
+    updateElementStyles(id: string, styles: Record<string, unknown>) {
       store.getState().updateElement(id, { styles: styles as any });
     },
 
@@ -157,23 +149,29 @@ export function createEditorActions(api: EditorApi, schema: EditorSchema) {
 
     async saveAll() {
       const state = store.getState();
-      for (const el of state.elements) {
-        await api.fetch(`/elements/${el.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ data: el.data, styles: el.styles, order: el.order }),
-        });
-      }
-      for (const pageId of state.dirtyPageIds) {
-        const page = state.pages.find((p) => p.id === pageId);
-        if (page) {
-          await api.fetch(`/pages/${pageId}`, {
+      store.getState().setSaveStatus("saving");
+      try {
+        for (const el of state.elements) {
+          await api.fetch(`/elements/${el.id}`, {
             method: "PATCH",
-            body: JSON.stringify({ slug: page.slug, data: page.data }),
+            body: JSON.stringify({ data: el.data, styles: el.styles, order: el.order }),
           });
         }
+        for (const pageId of state.dirtyPageIds) {
+          const page = state.pages.find((p) => p.id === pageId);
+          if (page) {
+            await api.fetch(`/pages/${pageId}`, {
+              method: "PATCH",
+              body: JSON.stringify({ slug: page.slug, data: page.data }),
+            });
+          }
+        }
+        store.getState().setDirty(false);
+        store.setState({ dirtyPageIds: new Set() });
+        store.getState().setSaveStatus("saved");
+      } catch {
+        store.getState().setSaveStatus("idle");
       }
-      store.getState().setDirty(false);
-      store.setState({ dirtyPageIds: new Set() });
     },
   };
 }

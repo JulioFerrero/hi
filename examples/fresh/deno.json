@@ -1,0 +1,27 @@
+{
+  "name": "@hi/example-fresh",
+  "version": "0.1.0",
+  "private": true,
+  "tasks": {
+    "dev": "deno run -A main.ts",
+    "build": "deno run -A main.ts build",
+    "start": "deno run -A main.ts"
+  },
+  "imports": {
+    "@/": "./",
+    "fresh": "jsr:@fresh/core@^2.3.3",
+    "preact": "npm:preact@^10.26.0",
+    "preact-render-to-string": "npm:preact-render-to-string@^6.5.0",
+    "react": "npm:preact@^10.26.0/compat",
+    "react-dom": "npm:preact@^10.26.0/compat",
+    "react/jsx-runtime": "npm:preact@^10.26.0/jsx-runtime",
+    "@hi/types": "../../packages/types/deno.json",
+    "@hi/utils": "../../packages/utils/deno.json",
+    "@hi/ui": "../../packages/ui/deno.json",
+    "@hi/website": "../../packages/website/deno.json"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  }
+}

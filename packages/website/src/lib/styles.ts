@@ -14,8 +14,8 @@ function isHex(value: string): boolean {
   return value.startsWith("#");
 }
 
-function colorClass(prefix: string, value: string): string {
-  if (isHex(value)) return `${prefix}-[${value}]`;
+function colorClass(prefix: string, value: string): string | null {
+  if (isHex(value)) return null;
   return `${prefix}-${value}`;
 }
 
@@ -63,5 +63,8 @@ function styleToClass(key: string, value: string): string | null {
 export function inlineStylesFromTokens(styles: Record<string, unknown>): React.CSSProperties {
   const result: Record<string, string> = {};
   if (styles.backgroundImage) result.backgroundImage = String(styles.backgroundImage);
+  if (styles.color && isHex(String(styles.color))) result.color = String(styles.color);
+  if (styles.backgroundColor && isHex(String(styles.backgroundColor))) result.backgroundColor = String(styles.backgroundColor);
+  if (styles.borderColor && isHex(String(styles.borderColor))) result.borderColor = String(styles.borderColor);
   return result as React.CSSProperties;
 }

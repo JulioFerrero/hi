@@ -2,9 +2,8 @@
 
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import { useEditorStore } from "../../stores";
-import type { Viewport, RenderElement } from "../../types";
+import type { Viewport } from "../../types";
 import { useEditorContext } from "../../lib/context";
-import { buildTree, ElementRenderer } from "@wb/website";
 
 interface Transform {
   x: number;
@@ -24,11 +23,11 @@ export function Canvas() {
 
   const elements = useEditorStore((s) => s.elements);
   const selectedElementId = useEditorStore((s) => s.selectedElementId);
+  const hoveredElementId = useEditorStore((s) => s.hoveredElementId);
   const selectElement = useEditorStore((s) => s.selectElement);
   const activePageId = useEditorStore((s) => s.activePageId);
   const viewport = useEditorStore((s) => s.viewport);
-  const tree = buildTree(elements);
-  const { schema, actions } = useEditorContext();
+  const { schema, actions, renderer } = useEditorContext();
 
   const viewportWidths: Record<Viewport, number> = { desktop: 1440, tablet: 768, mobile: 375 };
   const pageWidth = viewportWidths[viewport] ?? 1440;
@@ -48,10 +47,10 @@ export function Canvas() {
       el.style.outline = "";
       el.style.outlineOffset = "";
     } else if (type === "hover") {
-      el.style.outline = "1px solid #93c5fd";
+      el.style.outline = "1px solid rgba(129, 140, 248, 0.5)";
       el.style.outlineOffset = "-1px";
     } else {
-      el.style.outline = "2px solid #3b82f6";
+      el.style.outline = "2px solid #818cf8";
       el.style.outlineOffset = "-1px";
     }
   }, []);
@@ -213,6 +212,23 @@ export function Canvas() {
     }
   }, [selectedElementId, elements, applyOutline]);
 
+  useEffect(() => {
+    const root = contentRef.current;
+    if (!root) return;
+    if (lastHoveredRef.current && lastHoveredRef.current !== lastSelectedRef.current) {
+      applyOutline(lastHoveredRef.current, "none");
+    }
+    if (hoveredElementId && hoveredElementId !== selectedElementId) {
+      const el = root.querySelector(`[data-el-id="${hoveredElementId}"]`) as HTMLElement | null;
+      if (el) {
+        applyOutline(el, "hover");
+        lastHoveredRef.current = el;
+      }
+    } else {
+      lastHoveredRef.current = null;
+    }
+  }, [hoveredElementId, selectedElementId, applyOutline]);
+
   const findFirstChild = useCallback((elementId: string): string | null => {
     const el = elements.find((e) => e.id === elementId);
     if (!el) return null;
@@ -255,7 +271,7 @@ export function Canvas() {
     selectElement(elId);
 
     target.contentEditable = "true";
-    target.style.outline = "2px solid #3b82f6";
+    target.style.outline = "2px solid #818cf8";
     target.style.cursor = "text";
     target.focus();
     const range = document.createRange();
@@ -293,7 +309,7 @@ export function Canvas() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <div
         ref={containerRef}
-        className="relative flex-1 overflow-hidden bg-neutral-100"
+        className="relative flex-1 overflow-hidden bg-editor-canvas"
         style={{ cursor: "default" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -304,31 +320,32 @@ export function Canvas() {
       >
         <div ref={contentRef} className="absolute" style={{ willChange: "transform" }}>
           <div
-            className="bg-white shadow-lg"
+            className="bg-white rounded-xl shadow-[0_2px_20px_rgba(0,0,0,0.3)]"
             style={{ width: `${pageWidth}px`, minHeight: "800px", transition: "width 0.3s ease" }}
           >
-            {tree.length === 0 && (
-              <div className="flex h-[600px] items-center justify-center text-neutral-400">
+            {elements.length === 0 && (
+              <div className="flex h-[600px] items-center justify-center text-muted-foreground/50">
                 <div className="text-center">
-                  <p className="text-lg">Empty page</p>
-                  <p className="text-sm">Add elements using the toolbar below</p>
+                  <p className="text-lg font-medium">Empty page</p>
+                  <p className="mt-1 text-sm">Add elements using the toolbar below</p>
                 </div>
               </div>
             )}
-            {tree.map((el) => (
-              <ElementRenderer key={el.id} element={el} editor />
-            ))}
+            <renderer.PageRenderer elements={elements} editor />
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t bg-white px-3 py-2">
-        <ElementToolbar pageId={activePageId} containerSet={containerSet} />
-        <div className="flex items-center gap-1">
-          <button onClick={handleZoomOut} className="rounded px-2 py-1 text-xs hover:bg-gray-100">−</button>
-          <span className="text-xs text-gray-500">{zoom}%</span>
-          <button onClick={handleZoomIn} className="rounded px-2 py-1 text-xs hover:bg-gray-100">+</button>
-          <button onClick={handleFitScreen} className="ml-1 rounded px-2 py-1 text-xs hover:bg-gray-100">Fit</button>
+      <div className="flex items-center justify-between px-4 py-2.5 bg-editor-canvas">
+        <div className="flex items-center gap-0.5 rounded-2xl bg-popover/80 backdrop-blur-sm p-1 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+          <ElementToolbar pageId={activePageId} containerSet={containerSet} />
+        </div>
+        <div className="flex items-center gap-0.5 rounded-2xl bg-popover/80 backdrop-blur-sm px-3 py-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+          <button onClick={handleZoomOut} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">−</button>
+          <span className="text-xs text-muted-foreground tabular-nums min-w-[36px] text-center">{zoom}%</span>
+          <button onClick={handleZoomIn} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">+</button>
+          <div className="w-px h-3 bg-border/60 mx-1" />
+          <button onClick={handleFitScreen} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">Fit</button>
         </div>
       </div>
     </div>
@@ -345,14 +362,14 @@ function ElementToolbar({ pageId, containerSet }: { pageId: string | null; conta
   const parentId = selected && containerSet.has(selected.type) ? selected.id : null;
 
   return (
-    <div className="flex items-center gap-1">
+    <>
       {schema.elementTypes.map((et) => {
         const Icon = et.icon;
         return (
           <button
             key={et.type}
             onClick={() => actions.addElement(pageId, et.type, parentId)}
-            className="flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors duration-150"
             title={parentId ? `Add ${et.label} inside ${selected!.type}` : `Add ${et.label}`}
           >
             <Icon className="h-3.5 w-3.5" />
@@ -360,6 +377,6 @@ function ElementToolbar({ pageId, containerSet }: { pageId: string | null; conta
           </button>
         );
       })}
-    </div>
+    </>
   );
 }

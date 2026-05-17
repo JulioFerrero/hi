@@ -1,5 +1,0 @@
-@import "tailwindcss";
-@import "@wb/ui/styles.css";
-@import "@wb/website/styles.css";
-@import "@wb/editor/styles.css";
-@source "../safelist.ts";

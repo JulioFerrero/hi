@@ -7,16 +7,20 @@ interface HistoryEntry {
   selectedElementId: string | null;
 }
 
+export type SaveStatus = "idle" | "saving" | "saved";
+
 export interface EditorState {
   activeSiteId: string | null;
   activePageId: string | null;
   selectedElementId: string | null;
+  hoveredElementId: string | null;
   viewport: Viewport;
   pages: PageItem[];
   dirtyPageIds: Set<string>;
   elements: RenderElement[];
   isDirty: boolean;
   isLoading: boolean;
+  saveStatus: SaveStatus;
   _history: HistoryEntry[];
   _historyIndex: number;
 }
@@ -29,6 +33,7 @@ export interface EditorActions {
   updatePageLocal: (id: string, updates: { data?: Record<string, unknown>; slug?: string }) => void;
   setElements: (elements: RenderElement[]) => void;
   selectElement: (id: string | null) => void;
+  setHoveredElement: (id: string | null) => void;
   updateElement: (id: string, updates: Partial<RenderElement>) => void;
   addElement: (element: RenderElement) => void;
   removeElement: (id: string) => void;
@@ -37,6 +42,7 @@ export interface EditorActions {
   moveElement: (id: string, newParentId: string | null, index: number) => void;
   setDirty: (dirty: boolean) => void;
   setLoading: (loading: boolean) => void;
+  setSaveStatus: (status: SaveStatus) => void;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
@@ -51,12 +57,14 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
   activeSiteId: null,
   activePageId: null,
   selectedElementId: null,
+  hoveredElementId: null,
   viewport: "desktop",
   pages: [],
   dirtyPageIds: new Set<string>(),
   elements: [],
   isDirty: false,
   isLoading: false,
+  saveStatus: "idle",
   _history: [],
   _historyIndex: -1,
 
@@ -80,6 +88,7 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
     })),
   setElements: (elements) => set({ elements, isDirty: false }),
   selectElement: (id) => set({ selectedElementId: id }),
+  setHoveredElement: (id) => set({ hoveredElementId: id }),
   updateElement: (id, updates) =>
     set((s) => ({
       elements: s.elements.map((e) => (e.id === id ? { ...e, ...updates } : e)),
@@ -146,8 +155,9 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
         _historyIndex: Math.min(newHistory.length, MAX_HISTORY - 1),
       };
     }),
-  setDirty: (dirty) => set({ isDirty: dirty }),
+  setDirty: (dirty) => set((s) => ({ isDirty: dirty, saveStatus: dirty ? "idle" : s.saveStatus })),
   setLoading: (loading) => set({ isLoading: loading }),
+  setSaveStatus: (status) => set({ saveStatus: status }),
   undo: () =>
     set((s) => {
       if (s._historyIndex < 0) return s;

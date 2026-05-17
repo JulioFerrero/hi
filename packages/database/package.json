@@ -1,5 +1,5 @@
 {
-  "name": "@wb/database",
+  "name": "@hi/database",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,10 +20,9 @@
     "drizzle-orm": "^0.43.0",
     "nanoid": "^5.1.5",
     "postgres": "^3.4.5",
-    "@wb/types": "workspace:*"
+    "@hi/types": "workspace:*"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.0",
-    "dotenv": "^16.5.0"
+    "drizzle-kit": "^0.31.0"
   }
 }

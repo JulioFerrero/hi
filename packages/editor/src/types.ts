@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 export interface FieldConfig {
   name: string;
@@ -43,6 +43,10 @@ export interface EditorApi {
   fetch: (path: string, init?: RequestInit) => Promise<any>;
 }
 
+export interface RendererAdapter {
+  PageRenderer: ComponentType<{ elements: RenderElement[]; editor?: boolean }>;
+}
+
 export interface PageItem {
   id: string;
   slug: string;
@@ -65,4 +69,5 @@ export interface EditorProps {
   siteId: string;
   schema: EditorSchema;
   api: EditorApi;
+  renderer: RendererAdapter;
 }

@@ -1,32 +1,100 @@
 @source "../";
+@source "../../ui/src/";
 
 @theme {
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #737373;
-  --color-border: #e5e5e5;
-  --color-input: #e5e5e5;
-  --color-ring: #0a0a0a;
-  --color-primary: #0a0a0a;
-  --color-primary-foreground: #fafafa;
-  --color-secondary: #f5f5f5;
-  --color-secondary-foreground: #171717;
-  --color-accent: #f5f5f5;
-  --color-accent-foreground: #171717;
+  --color-background: #0c0c0c;
+  --color-foreground: #e4e4e7;
+  --color-muted: #1e1e1e;
+  --color-muted-foreground: #71717a;
+  --color-border: #27272a;
+  --color-input: #27272a;
+  --color-ring: #52525b;
+  --color-primary: #f4f4f5;
+  --color-primary-foreground: #0c0c0c;
+  --color-secondary: #1e1e1e;
+  --color-secondary-foreground: #e4e4e7;
+  --color-accent: #1e1e1e;
+  --color-accent-foreground: #e4e4e7;
   --color-destructive: #ef4444;
-  --color-destructive-foreground: #fafafa;
-  --color-card: #ffffff;
-  --color-card-foreground: #0a0a0a;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #0a0a0a;
-  --color-sidebar: #fafafa;
-  --color-sidebar-foreground: #404040;
-  --color-sidebar-border: #e5e5e5;
-  --color-sidebar-accent: #f5f5f5;
-  --color-sidebar-accent-foreground: #171717;
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
+  --color-destructive-foreground: #f4f4f5;
+  --color-card: #161616;
+  --color-card-foreground: #e4e4e7;
+  --color-popover: #1a1a1a;
+  --color-popover-foreground: #e4e4e7;
+  --color-sidebar: #141414;
+  --color-sidebar-foreground: #a1a1aa;
+  --color-sidebar-border: #27272a;
+  --color-sidebar-accent: #1e1e1e;
+  --color-sidebar-accent-foreground: #e4e4e7;
+  --color-editor-canvas: #0a0a0a;
+  --color-editor-surface: #161616;
+  --color-editor-selected: rgba(99, 102, 241, 0.12);
+  --color-editor-ring: #818cf8;
+  --color-editor-hover: #c7d2fe;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
+}
+
+.editor-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.editor-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-scroll::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 9999px;
+}
+
+.editor-scroll::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+.editor-scroll-x::-webkit-scrollbar {
+  height: 5px;
+}
+
+.editor-scroll-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-scroll-x::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 9999px;
+}
+
+.editor-scroll-x::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+.dialog-backdrop[data-starting-style],
+.dialog-backdrop[data-ending-style] {
+  opacity: 0;
+}
+
+.dialog-popup[data-starting-style] {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+.dialog-popup[data-ending-style] {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+@keyframes animate-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.animate-in {
+  animation: animate-in 100ms ease-out both;
 }

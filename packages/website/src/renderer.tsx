@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import React from "react";
 import type { RenderElement } from "./lib/types";
 import { elAttrs } from "./lib/types";
 import { classesFromStyles, inlineStylesFromTokens } from "./lib/styles";
@@ -28,6 +28,7 @@ export function ElementRenderer({ element, editor }: { element: RenderElement; e
     const Component = COMPONENT_REGISTRY[element.type]!;
     const el = <Component element={element} className={className} style={style} children={children} attrs={attrs} />;
     if (isEditor) {
+      const Suspense = React.Suspense;
       return <Suspense fallback={<div {...attrs} className={className} />}>{el}</Suspense>;
     }
     return el;

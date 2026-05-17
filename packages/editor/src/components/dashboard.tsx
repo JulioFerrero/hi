@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@wb/ui/button";
-import { Input } from "@wb/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription } from "@wb/ui/card";
+import { Button } from "@hi/ui/button";
+import { Input } from "@hi/ui/input";
+import { Card, CardHeader, CardTitle, CardDescription } from "@hi/ui/card";
 import { Plus, Globe } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@wb/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@hi/ui/dialog";
 import React from "react";
 import type { EditorApi } from "../types";
 
@@ -37,10 +37,10 @@ export function Dashboard({ api, onSelectSite }: DashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white px-6 py-4">
+    <div className="min-h-screen bg-background">
+      <header className="px-6 py-5">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <h1 className="text-xl font-bold">Web Builder</h1>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Web Builder</h1>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger render={<Button />}>
               <Plus className="mr-2 h-4 w-4" />
@@ -63,19 +63,19 @@ export function Dashboard({ api, onSelectSite }: DashboardProps) {
           </Dialog>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl p-6">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <main className="mx-auto max-w-6xl px-6 pb-12">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sites.map((site) => (
             <button
               key={site.id}
               onClick={() => onSelectSite(site.id)}
               className="text-left"
             >
-              <Card className="cursor-pointer transition-shadow hover:shadow-md">
+              <Card className="cursor-pointer rounded-2xl border-border/50 shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-border">
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
-                      <Globe className="h-5 w-5 text-gray-600" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                      <Globe className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
                       <CardTitle className="text-base">{site.data.name}</CardTitle>
@@ -87,10 +87,10 @@ export function Dashboard({ api, onSelectSite }: DashboardProps) {
             </button>
           ))}
           {sites.length === 0 && (
-            <div className="col-span-full py-20 text-center text-gray-400">
-              <Globe className="mx-auto mb-4 h-12 w-12" />
-              <p className="text-lg">No sites yet</p>
-              <p className="text-sm">Create your first site to get started</p>
+            <div className="col-span-full py-24 text-center text-muted-foreground">
+              <Globe className="mx-auto mb-4 h-12 w-12 opacity-30" />
+              <p className="text-lg font-medium text-foreground/60">No sites yet</p>
+              <p className="mt-1 text-sm">Create your first site to get started</p>
             </div>
           )}
         </div>
