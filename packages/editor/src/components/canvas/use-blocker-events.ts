@@ -1,7 +1,8 @@
 import type React from "react";
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { useEditorStore } from "../../stores";
 import type { EditorActions } from "../../lib/actions";
+import type { CursorMode } from "./canvas-cursor";
 
 interface Transform {
   x: number;
@@ -37,6 +38,7 @@ export function useBlockerEvents(
   const lastHoveredRef = useRef<HTMLElement | null>(null);
   const lastSelectedRef = useRef<HTMLElement | null>(null);
   const editingRef = useRef<HTMLElement | null>(null);
+  const [cursorMode, setCursorMode] = useState<CursorMode>("default");
 
   const screenToPage = useCallback((screenX: number, screenY: number): { x: number; y: number } | null => {
     const iframe = iframeRef.current;
@@ -69,6 +71,9 @@ export function useBlockerEvents(
     target.style.outline = "2px solid #818cf8";
     target.style.cursor = "text";
     target.focus();
+    const blocker = blockerRef.current;
+    if (blocker) blocker.style.cursor = "none";
+    setCursorMode("text");
     const doc = iframeRef.current?.contentDocument;
     if (doc) {
       const range = doc.createRange();
@@ -78,7 +83,7 @@ export function useBlockerEvents(
       sel?.addRange(range);
     }
     editingRef.current = target;
-  }, [iframeRef]);
+  }, [iframeRef, blockerRef]);
 
   useEffect(() => {
     const blocker = blockerRef.current;
@@ -86,9 +91,20 @@ export function useBlockerEvents(
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      if (editingRef.current) {
+        const elTarget = queryElementAtPoint(e.clientX, e.clientY);
+        if (editingRef.current !== elTarget) finishInlineEdit();
+        if (!elTarget) {
+          selectElement(null);
+          isDragging.current = true;
+          lastMouse.current = { x: e.clientX, y: e.clientY };
+          blocker.style.cursor = "none";
+          setCursorMode("grabbing");
+          return;
+        }
+      }
       const elTarget = queryElementAtPoint(e.clientX, e.clientY);
       if (elTarget) {
-        if (editingRef.current && editingRef.current !== elTarget) finishInlineEdit();
         const clickedId = elTarget.getAttribute("data-el-id")!;
         if (clickedId === useEditorStore.getState().selectedElementId) {
           const elems = useEditorStore.getState().elements;
@@ -99,11 +115,11 @@ export function useBlockerEvents(
         }
         return;
       }
-      if (editingRef.current) finishInlineEdit();
       selectElement(null);
       isDragging.current = true;
       lastMouse.current = { x: e.clientX, y: e.clientY };
-      blocker.style.cursor = "grabbing";
+      blocker.style.cursor = "none";
+      setCursorMode("grabbing");
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -114,6 +130,7 @@ export function useBlockerEvents(
         applyTransform();
         return;
       }
+      if (editingRef.current) return;
       const elTarget = queryElementAtPoint(e.clientX, e.clientY);
       if (lastHoveredRef.current && lastHoveredRef.current !== elTarget) {
         if (lastHoveredRef.current !== lastSelectedRef.current) applyOutline(lastHoveredRef.current, "none");
@@ -121,17 +138,20 @@ export function useBlockerEvents(
       if (elTarget) {
         applyOutline(elTarget, "hover");
         lastHoveredRef.current = elTarget;
-        blocker.style.cursor = "pointer";
+        blocker.style.cursor = "none";
+        setCursorMode("hover");
       } else {
         lastHoveredRef.current = null;
-        blocker.style.cursor = "default";
+        blocker.style.cursor = "none";
+        setCursorMode("default");
       }
     };
 
     const onMouseUp = () => {
       if (isDragging.current) {
         isDragging.current = false;
-        blocker.style.cursor = "default";
+        blocker.style.cursor = "none";
+        setCursorMode("default");
       }
     };
 
@@ -162,5 +182,6 @@ export function useBlockerEvents(
     lastSelectedRef,
     applyOutline,
     finishInlineEdit,
+    cursorMode,
   };
 }
