@@ -9,12 +9,14 @@ export function CanvasCursor({
   color = "#7B61FF",
   name,
   visible = true,
+  dragLabel,
 }: {
   containerRef: React.RefObject<HTMLDivElement | null>;
   mode: CursorMode;
   color?: string;
   name?: string;
   visible?: boolean;
+  dragLabel?: string | null;
 }) {
   const [pos, setPos] = useState({ x: -100, y: -100 });
   const [inContainer, setInContainer] = useState(false);
@@ -43,6 +45,26 @@ export function CanvasCursor({
   }, [containerRef]);
 
   if (!visible || !inContainer) return null;
+
+  if (dragLabel) {
+    return createPortal(
+      <div style={{ position: "fixed", inset: 0, zIndex: 99999, pointerEvents: "none" }}>
+        <div style={{ position: "absolute", left: pos.x, top: pos.y }}>
+          <div style={{
+            marginTop: 12, marginLeft: 12,
+            background: color, color: "white",
+            fontSize: 11, fontWeight: 600, fontFamily: "Inter, system-ui, sans-serif",
+            padding: "4px 10px", borderRadius: 6, whiteSpace: "nowrap",
+            boxShadow: "0 2px 8px rgba(0,0,0,.3)",
+            border: "1px solid rgba(255,255,255,0.15)",
+          }}>
+            {dragLabel}
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
+  }
 
   const showLabel = name || mode === "hover" || mode === "grab";
   const labelText = name || (mode === "hover" ? "Select" : mode === "grab" ? "Pan" : null);

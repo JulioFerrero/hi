@@ -14,15 +14,20 @@ function ToolbarButton({
   icon: Icon,
   label,
   onClick,
+  elementType,
+  onDragStart,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   onClick: () => void;
+  elementType?: string;
+  onDragStart?: (type: string, e: React.MouseEvent) => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      onMouseDown={elementType && onDragStart ? (e) => { if (e.button === 0) onDragStart(elementType, e); } : undefined}
       className="group relative flex items-center justify-center rounded-xl h-8 w-8 flex-shrink-0 text-white/70 hover:bg-white/10 hover:text-white transition-colors duration-150"
     >
       <Icon className="h-4 w-4" />
@@ -42,9 +47,11 @@ function chunk<T>(arr: T[], size: number): T[][] {
 function ElementToolbar({
   pageId,
   containerSet,
+  onDragStart,
 }: {
   pageId: string | null;
   containerSet: Set<string>;
+  onDragStart?: (type: string, e: React.MouseEvent) => void;
 }) {
   const { schema, actions } = useEditorContext();
   const selectedElementId = useEditorStore((s) => s.selectedElementId);
@@ -69,6 +76,7 @@ function ElementToolbar({
 
   const handleClick = (type: string) =>
     actions.addElement(pageId, type, parentId);
+  const onToolbarDragStart = onDragStart;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -104,6 +112,8 @@ function ElementToolbar({
               key={b.type}
               icon={b.icon}
               label={b.label}
+              elementType={b.type}
+              onDragStart={onToolbarDragStart}
               onClick={() => handleClick(b.type)}
             />
           ))}
@@ -138,6 +148,8 @@ function ElementToolbar({
                   key={b.type}
                   icon={b.icon}
                   label={b.label}
+                  elementType={b.type}
+                  onDragStart={onToolbarDragStart}
                   onClick={() => handleClick(b.type)}
                 />
               ))}
@@ -155,6 +167,7 @@ export function CanvasToolbar({
   onZoomIn,
   onZoomOut,
   onFitScreen,
+  onElementDragStart,
 }: {
   pageId: string | null;
   containerSet: Set<string>;
@@ -162,11 +175,12 @@ export function CanvasToolbar({
   onZoomIn: () => void;
   onZoomOut: () => void;
   onFitScreen: () => void;
+  onElementDragStart?: (type: string, e: React.MouseEvent) => void;
 }) {
   return (
     <div className="flex items-end justify-between px-4 py-2 overflow-visible relative" style={{ cursor: "default" }}>
       <div className="flex items-end gap-1 rounded-2xl bg-black/80 backdrop-blur-xl p-1 shadow-[0_1px_3px_rgba(0,0,0,0.2)] min-w-0 flex-1 overflow-visible">
-        <ElementToolbar pageId={pageId} containerSet={containerSet} />
+        <ElementToolbar pageId={pageId} containerSet={containerSet} onDragStart={onElementDragStart} />
       </div>
       <div className="flex items-center gap-0.5 rounded-2xl bg-black/80 backdrop-blur-xl px-2 py-1 shadow-[0_1px_3px_rgba(0,0,0,0.2)] ml-2 flex-shrink-0 mb-0.5">
         <button

@@ -1,60 +1,47 @@
-import type React from "react";
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { useEditorStore } from "../../stores";
-import type { EditorActions } from "../../lib/actions";
-import type { CursorMode } from "./canvas-cursor";
-
-interface Transform {
-  x: number;
-  y: number;
-  scale: number;
-}
 
 function applyOutline(el: HTMLElement | null, type: "hover" | "selected" | "none") {
   if (!el) return;
-  if (type === "none") {
-    el.style.outline = "";
-    el.style.outlineOffset = "";
-  } else if (type === "hover") {
-    el.style.outline = "1px solid rgba(129, 140, 248, 0.5)";
-    el.style.outlineOffset = "-1px";
-  } else {
-    el.style.outline = "2px solid #818cf8";
-    el.style.outlineOffset = "-1px";
-  }
+  if (type === "none") { el.style.outline = ""; el.style.outlineOffset = ""; }
+  else if (type === "hover") { el.style.outline = "1px solid rgba(129, 140, 248, 0.5)"; el.style.outlineOffset = "-1px"; }
+  else { el.style.outline = "2px solid #818cf8"; el.style.outlineOffset = "-1px"; }
 }
 
 export function useBlockerEvents(
   blockerRef: React.RefObject<HTMLDivElement | null>,
-  iframeRef: React.RefObject<HTMLIFrameElement | null>,
-  transformRef: React.RefObject<Transform>,
-  applyTransform: () => void,
-  editableTypes: Set<string>,
+  wrapperRef: React.RefObject<HTMLDivElement | null>,
+  toolbarRef: React.RefObject<HTMLDivElement | null>,
+  transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
+  isNativeDrag: React.RefObject<boolean>,
+  actions: any,
   selectElement: (id: string | null) => void,
-  actions: EditorActions,
+  editableTypes: Set<string>,
+  applyTransform: () => void,
+  setCursorMode: (m: any) => void,
 ) {
   const isDragging = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
   const lastHoveredRef = useRef<HTMLElement | null>(null);
   const lastSelectedRef = useRef<HTMLElement | null>(null);
   const editingRef = useRef<HTMLElement | null>(null);
-  const [cursorMode, setCursorMode] = useState<CursorMode>("default");
 
-  const screenToPage = useCallback((screenX: number, screenY: number): { x: number; y: number } | null => {
-    const iframe = iframeRef.current;
-    if (!iframe) return null;
-    const rect = iframe.getBoundingClientRect();
+  const queryElementAtPoint = useCallback((screenX: number, screenY: number): { el: HTMLElement } | null => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return null;
+    const iframes = Array.from(wrapper.querySelectorAll("iframe"));
     const t = transformRef.current;
-    return { x: (screenX - rect.left) / t.scale, y: (screenY - rect.top) / t.scale };
-  }, [iframeRef, transformRef]);
-
-  const queryElementAtPoint = useCallback((screenX: number, screenY: number): HTMLElement | null => {
-    const point = screenToPage(screenX, screenY);
-    if (!point) return null;
-    const doc = iframeRef.current?.contentDocument;
-    if (!doc) return null;
-    return doc.elementFromPoint(point.x, point.y)?.closest("[data-el-id]") as HTMLElement ?? null;
-  }, [screenToPage, iframeRef]);
+    for (const iframe of iframes) {
+      const rect = iframe.getBoundingClientRect();
+      const px = (screenX - rect.left) / t.scale;
+      const py = (screenY - rect.top) / t.scale;
+      const doc = iframe.contentDocument;
+      if (!doc) continue;
+      const hit = doc.elementFromPoint(px, py)?.closest("[data-el-id]") as HTMLElement | null;
+      if (hit) return { el: hit };
+    }
+    return null;
+  }, []);
 
   const finishInlineEdit = useCallback(() => {
     const target = editingRef.current;
@@ -64,6 +51,7 @@ export function useBlockerEvents(
     const elId = target.getAttribute("data-el-id")!;
     actions.updateElementData(elId, { content: target.innerText });
     editingRef.current = null;
+    setCursorMode("default");
   }, [actions]);
 
   const startInlineEdit = useCallback((target: HTMLElement) => {
@@ -71,19 +59,18 @@ export function useBlockerEvents(
     target.style.outline = "2px solid #818cf8";
     target.style.cursor = "text";
     target.focus();
-    const blocker = blockerRef.current;
-    if (blocker) blocker.style.cursor = "none";
-    setCursorMode("text");
-    const doc = iframeRef.current?.contentDocument;
-    if (doc) {
+    const doc = target.ownerDocument;
+    const win = doc.defaultView;
+    if (win) {
       const range = doc.createRange();
       range.selectNodeContents(target);
-      const sel = iframeRef.current?.contentWindow?.getSelection();
+      const sel = win.getSelection();
       sel?.removeAllRanges();
       sel?.addRange(range);
     }
     editingRef.current = target;
-  }, [iframeRef, blockerRef]);
+    setCursorMode("text");
+  }, []);
 
   useEffect(() => {
     const blocker = blockerRef.current;
@@ -91,30 +78,18 @@ export function useBlockerEvents(
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
-      if (editingRef.current) {
-        const elTarget = queryElementAtPoint(e.clientX, e.clientY);
-        if (editingRef.current !== elTarget) finishInlineEdit();
-        if (!elTarget) {
-          selectElement(null);
-          isDragging.current = true;
-          lastMouse.current = { x: e.clientX, y: e.clientY };
-          blocker.style.cursor = "none";
-          setCursorMode("grabbing");
-          return;
-        }
-      }
-      const elTarget = queryElementAtPoint(e.clientX, e.clientY);
-      if (elTarget) {
-        const clickedId = elTarget.getAttribute("data-el-id")!;
+      const hit = queryElementAtPoint(e.clientX, e.clientY);
+      if (hit) {
+        if (editingRef.current && editingRef.current !== hit.el) finishInlineEdit();
+        const clickedId = hit.el.getAttribute("data-el-id")!;
         if (clickedId === useEditorStore.getState().selectedElementId) {
           const elems = useEditorStore.getState().elements;
           const child = elems.find((c) => c.parentId === clickedId);
           if (child) selectElement(child.id);
-        } else {
-          selectElement(clickedId);
-        }
+        } else { selectElement(clickedId); }
         return;
       }
+      if (editingRef.current) finishInlineEdit();
       selectElement(null);
       isDragging.current = true;
       lastMouse.current = { x: e.clientX, y: e.clientY };
@@ -123,6 +98,8 @@ export function useBlockerEvents(
     };
 
     const onMouseMove = (e: MouseEvent) => {
+      if (isNativeDrag.current) return;
+      if (toolbarRef.current && toolbarRef.current.contains(e.target as Node)) return;
       if (isDragging.current) {
         transformRef.current.x += e.clientX - lastMouse.current.x;
         transformRef.current.y += e.clientY - lastMouse.current.y;
@@ -131,18 +108,16 @@ export function useBlockerEvents(
         return;
       }
       if (editingRef.current) return;
-      const elTarget = queryElementAtPoint(e.clientX, e.clientY);
-      if (lastHoveredRef.current && lastHoveredRef.current !== elTarget) {
+      const hit = queryElementAtPoint(e.clientX, e.clientY);
+      if (lastHoveredRef.current && lastHoveredRef.current !== hit?.el) {
         if (lastHoveredRef.current !== lastSelectedRef.current) applyOutline(lastHoveredRef.current, "none");
       }
-      if (elTarget) {
-        applyOutline(elTarget, "hover");
-        lastHoveredRef.current = elTarget;
-        blocker.style.cursor = "none";
+      if (hit) {
+        applyOutline(hit.el, "hover");
+        lastHoveredRef.current = hit.el;
         setCursorMode("hover");
       } else {
         lastHoveredRef.current = null;
-        blocker.style.cursor = "none";
         setCursorMode("default");
       }
     };
@@ -150,19 +125,18 @@ export function useBlockerEvents(
     const onMouseUp = () => {
       if (isDragging.current) {
         isDragging.current = false;
-        blocker.style.cursor = "none";
         setCursorMode("default");
       }
     };
 
     const onDblClick = (e: MouseEvent) => {
-      const elTarget = queryElementAtPoint(e.clientX, e.clientY);
-      if (!elTarget) return;
-      const elId = elTarget.getAttribute("data-el-id")!;
+      const hit = queryElementAtPoint(e.clientX, e.clientY);
+      if (!hit) return;
+      const elId = hit.el.getAttribute("data-el-id")!;
       const el = useEditorStore.getState().elements.find((e) => e.id === elId);
       if (!el || !editableTypes.has(el.type)) return;
       selectElement(elId);
-      startInlineEdit(elTarget);
+      startInlineEdit(hit.el);
     };
 
     blocker.addEventListener("mousedown", onMouseDown);
@@ -175,13 +149,21 @@ export function useBlockerEvents(
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [blockerRef, queryElementAtPoint, applyTransform, selectElement, finishInlineEdit, startInlineEdit, editableTypes, transformRef]);
+  }, [queryElementAtPoint, applyTransform, selectElement, finishInlineEdit, startInlineEdit, editableTypes]);
 
-  return {
-    editingRef,
-    lastSelectedRef,
-    applyOutline,
-    finishInlineEdit,
-    cursorMode,
-  };
+  useEffect(() => {
+    if (lastSelectedRef.current) applyOutline(lastSelectedRef.current, "none");
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const docs = Array.from(wrapper.querySelectorAll("iframe")).map((f) => f.contentDocument).filter(Boolean) as Document[];
+    for (const doc of docs) {
+      if (useEditorStore.getState().selectedElementId) {
+        const el = doc.querySelector(`[data-el-id="${useEditorStore.getState().selectedElementId}"]`) as HTMLElement | null;
+        if (el) { applyOutline(el, "selected"); lastSelectedRef.current = el; return; }
+      }
+    }
+    if (!useEditorStore.getState().selectedElementId) lastSelectedRef.current = null;
+  }, [useEditorStore.getState().selectedElementId, useEditorStore.getState().elements]);
+
+  return { queryElementAtPoint, editingRef };
 }
