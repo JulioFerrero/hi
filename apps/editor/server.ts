@@ -3,6 +3,6 @@ import { tailwindCssResponse } from "@hi/website";
 import { join } from "node:path";
 
 createServer({
-  distDir: join(import.meta.dirname, "dist"),
+  distDir: join(import.meta.dirname!, "dist"),
   tailwindCSS: (classes) => tailwindCssResponse(classes),
 });

@@ -1,7 +1,7 @@
 import { db } from "@hi/database";
 import { pages, elements } from "@hi/database";
 import { eq, asc } from "drizzle-orm";
-import { PageRenderer, buildTree, type RenderElement } from "@hi/website";
+import { PageRenderer, type RenderElement } from "@hi/website";
 
 interface PageProps {
   params: Promise<{ slug?: string[] }>;
@@ -21,7 +21,7 @@ export default async function DynamicPage({ params }: PageProps) {
   }
 
   const allPages = await db.select().from(pages).where(eq(pages.siteId, siteId));
-  const page = allPages.find((p) => (p.data as any)?.path === (path === "" ? "/" : path));
+  const page = allPages.find((p) => (p.data as Record<string, unknown>)?.path === (path === "" ? "/" : path));
 
   if (!page) {
     return (

@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import { resolve, dirname } from "node:path";
+import { resolve } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 
 const EXTENSIONS = [".tsx", ".ts", ".jsx", ".js", "/index.tsx", "/index.ts"];

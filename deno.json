@@ -1,5 +1,10 @@
 {
   "workspace": ["apps/*", "packages/*"],
+  "lint": {
+    "rules": {
+      "exclude": ["no-sloppy-imports", "no-import-prefix", "no-unversioned-import", "no-slow-types", "no-explicit-any"]
+    }
+  },
   "unstable": [
     "bare-node-builtins",
     "detect-cjs",

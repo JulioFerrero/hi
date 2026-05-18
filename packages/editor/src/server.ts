@@ -1,6 +1,6 @@
-import { app as apiApp } from "../api/index";
+import { app as apiApp } from "./api/index";
 import { join } from "node:path";
-import { readFile, exists } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 
 interface CreateServerOptions {
   port?: number;
@@ -49,13 +49,15 @@ export function createServer(options: CreateServerOptions) {
     }
 
     let filePath = join(distDir, url.pathname === "/" ? "index.html" : url.pathname);
-    if (!(await exists(filePath))) {
+    try {
+      await stat(filePath);
+    } catch {
       filePath = join(distDir, "index.html");
     }
 
     try {
       const content = await readFile(filePath);
-      return new Response(content, { headers: { "content-type": getMimeType(filePath) } });
+      return new Response(new Uint8Array(content), { headers: { "content-type": getMimeType(filePath) } });
     } catch {
       return new Response("Not Found", { status: 404 });
     }

@@ -10,8 +10,8 @@
     "db:seed": "deno run -A --env=.env src/index.ts db:seed"
   },
   "imports": {
-    "@hi/editor": "../../packages/editor/deno.json",
-    "@hi/database": "../../packages/database/deno.json",
-    "@hi/website": "../../packages/website/deno.json"
+    "@hi/editor": "../../packages/editor/src/index.ts",
+    "@hi/database": "../../packages/database/src/index.ts",
+    "@hi/website": "../../packages/website/src/index.ts"
   }
 }

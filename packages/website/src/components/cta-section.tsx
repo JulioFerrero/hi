@@ -1,4 +1,3 @@
-import React from "react";
 import type { ElementProps } from "@hi/render";
 
 export function CTASection({ element, className, style, attrs }: ElementProps) {

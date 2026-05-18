@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import type { RendererMap } from "./types";
-import { RenderPage } from "./renderer";
 import { createTailwindGenerator } from "./tailwind";
 
 export interface SiteConfig {

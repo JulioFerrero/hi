@@ -8,7 +8,7 @@ const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
 const SelectTrigger = React.forwardRef<
-  HTMLDivElement,
+  HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
@@ -39,9 +39,9 @@ const SelectContent = React.forwardRef<
       {...props}
     >
       <SelectPrimitive.ScrollUpArrow className="flex cursor-default items-center justify-center py-1" />
-      <SelectPrimitive.Viewport className="p-1 h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]">
+      <SelectPrimitive.List className="p-1 h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]">
         {children}
-      </SelectPrimitive.Viewport>
+      </SelectPrimitive.List>
       <SelectPrimitive.ScrollDownArrow className="flex cursor-default items-center justify-center py-1" />
     </SelectPrimitive.Popup>
   </SelectPrimitive.Portal>

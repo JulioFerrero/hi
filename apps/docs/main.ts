@@ -1,7 +1,6 @@
 import { App, staticFiles } from "fresh";
-import { define } from "./utils.ts";
 
-export const app = new App();
+export const app: App = new App();
 
 app.use(staticFiles());
 app.fsRoutes();

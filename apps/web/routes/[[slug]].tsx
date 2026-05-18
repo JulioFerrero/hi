@@ -5,6 +5,8 @@ import { db } from "@hi/database";
 import { pages, elements } from "@hi/database";
 import { eq, asc } from "drizzle-orm";
 
+type PageData = { error: string | null; elements: RenderElement[] | null };
+
 const fallbackElements: RenderElement[] = [
   { id: "s1", parentId: null, type: "section", order: 0, data: {}, styles: { width: "full", padding: "16", paddingX: "6" } },
   { id: "h1", parentId: "s1", type: "heading", order: 0, data: { content: "@hi/web", tagName: "h1" }, styles: { fontSize: "4xl", fontWeight: "bold" } },
@@ -21,7 +23,7 @@ export const handler = define.handlers({
     const slug = ctx.params.slug ?? "";
     const path = "/" + slug;
     const allPages = await db.select().from(pages).where(eq(pages.siteId, siteId));
-    const found = allPages.find((p) => (p.data as any)?.path === (path === "" ? "/" : path));
+    const found = allPages.find((p) => (p.data as Record<string, unknown>)?.path === (path === "" ? "/" : path));
 
     if (!found) {
       return page({ error: "Page not found: " + (path || "/"), elements: null });
@@ -44,7 +46,7 @@ export const handler = define.handlers({
   },
 });
 
-export default define.page<typeof handler>(({ data }) => {
+export default define.page<typeof handler>(({ data }: { data: PageData }) => {
   if (!data.elements) {
     if (data.error) {
       return (

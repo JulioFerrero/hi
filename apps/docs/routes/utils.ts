@@ -1,5 +1,5 @@
 import { define } from "@/utils.ts";
 
-export interface State {}
+export type State = Record<string, never>;
 
 export const defineD = define;

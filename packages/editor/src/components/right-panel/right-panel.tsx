@@ -219,7 +219,7 @@ function SectionHeader({ title, defaultOpen = true, open: controlledOpen, onTogg
   const toggle = onToggle ?? (() => setInternalOpen(!internalOpen));
 
   return (
-    <button onClick={toggle}
+    <button type="button" onClick={toggle}
       className="flex items-center gap-2 w-full px-3 py-1.5 text-left hover:bg-white/[0.04] transition-colors">
       <ChevronRight className={cn("h-3 w-3 text-muted-foreground/40 transition-transform duration-150", open && "rotate-90")} />
       <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/50">{title}</span>
@@ -235,7 +235,7 @@ function IconBtn({ children, onClick, title, hoverColor }: {
   children: React.ReactNode; onClick: () => void; title: string; hoverColor?: string;
 }) {
   return (
-    <button onClick={onClick} title={title}
+    <button type="button" onClick={onClick} title={title}
       className={cn("p-1 rounded text-muted-foreground/40 transition-colors",
         hoverColor === "destructive"
           ? "hover:text-destructive hover:bg-destructive/10"
@@ -267,7 +267,7 @@ function Btn({ children, active, onClick, className }: {
   children: React.ReactNode; active: boolean; onClick: () => void; className?: string;
 }) {
   return (
-    <button onClick={onClick}
+    <button type="button" onClick={onClick}
       className={cn(
         "flex-1 py-1 text-[10px] font-medium rounded-md transition-colors text-center",
         active ? "bg-foreground text-background" : "text-muted-foreground/60 hover:bg-muted hover:text-muted-foreground",
@@ -286,7 +286,7 @@ function IconBtnGroup({ icons, value, onChange, label }: {
       {label && <Label>{label}</Label>}
       <div className="flex gap-0.5">
         {icons.map((item) => (
-          <button key={item.value} onClick={() => onChange(value === item.value ? "" : item.value)} title={item.label}
+          <button type="button" key={item.value} onClick={() => onChange(value === item.value ? "" : item.value)} title={item.label}
             className={cn(
               "flex-1 h-7 flex items-center justify-center rounded-md transition-colors",
               value === item.value
@@ -499,7 +499,7 @@ function TypographyFields({ fields, styles, updateStyle }: {
               <Label>{f.label ?? f.name}</Label>
               <div className="flex flex-wrap gap-0.5">
                 {f.options?.map((opt) => (
-                  <button key={opt} onClick={() => updateStyle(f.name, val === opt ? "" : opt)} title={opt}
+                  <button type="button" key={opt} onClick={() => updateStyle(f.name, val === opt ? "" : opt)} title={opt}
                     className={cn(
                       "px-2 py-1 text-[10px] font-medium rounded-md transition-colors",
                       opt === "bold" || opt === "extrabold" || opt === "black" ? "font-bold" : opt === "semibold" || opt === "medium" ? "font-medium" : "font-normal",
@@ -582,7 +582,7 @@ function BackgroundFields({ fields, styles, updateStyle }: {
                 {(["left-top", "center-top", "right-top",
                    "left", "center", "right",
                    "left-bottom", "center-bottom", "right-bottom"] as const).map((pos) => (
-                  <button key={pos} onClick={() => updateStyle(f.name, val === pos ? "" : pos)} title={pos}
+                  <button type="button" key={pos} onClick={() => updateStyle(f.name, val === pos ? "" : pos)} title={pos}
                     className={cn(
                       "h-6 flex items-center justify-center rounded-md transition-colors",
                       val === pos ? "bg-foreground" : "hover:bg-muted"

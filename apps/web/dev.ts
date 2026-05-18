@@ -1,16 +1,17 @@
-import { App } from "fresh";
-import { dev, build } from "fresh/dev";
+import { App, staticFiles } from "fresh";
+import { Builder } from "fresh/dev";
 import { tailwind } from "@fresh/plugin-tailwind";
-import { staticFiles } from "fresh";
 
 const app = new App()
   .use(staticFiles())
   .fsRoutes();
 
-tailwind(app);
+const builder = new Builder();
+tailwind(builder, {});
 
 if (Deno.args.includes("build")) {
-  await build(app);
+  const applySnapshot = await builder.build();
+  applySnapshot(app);
 } else {
-  await dev(app, { port: 3000 });
+  await builder.listen(() => Promise.resolve(app), { port: 3000 });
 }

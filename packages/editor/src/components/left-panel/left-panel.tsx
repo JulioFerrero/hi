@@ -79,6 +79,7 @@ function CollapsibleSection({
   return (
     <div>
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2 w-full px-3 py-1.5 text-left hover:bg-white/[0.04] transition-colors"
       >
@@ -153,6 +154,7 @@ function CtxMenu({
         const Icon = item.icon;
         return (
           <button
+            type="button"
             key={item.action}
             onClick={(e) => { e.stopPropagation(); onAction(item.action); onClose(); }}
             className={cn(
@@ -245,7 +247,8 @@ export function LeftPanel() {
   const handlePageDelete = useCallback(({ ids }: { ids: string[] }) => { for (const id of ids) actions.deletePage(id); }, [actions]);
   const handlePageSelect = useCallback((nodes: NodeApi<PageTreeData>[]) => { if (nodes.length > 0 && nodes[0]) setActivePage(nodes[0].id); }, [setActivePage]);
 
-  const countNodes = (nodes: { children?: any[] }[]): number => {
+  type TreeNode = { children?: TreeNode[] };
+  const countNodes = (nodes: TreeNode[]): number => {
     let n = 0;
     for (const nd of nodes) { n += 1; if (nd.children?.length) n += countNodes(nd.children); }
     return n;
@@ -268,7 +271,7 @@ export function LeftPanel() {
 
   const handleContextMenu = useCallback((e: React.MouseEvent, state: CtxMenuState) => {
     e.preventDefault(); e.stopPropagation();
-    setCtxMenu({ ...state, y: Math.min(state.y, window.innerHeight - 280) });
+    setCtxMenu({ ...state, y: Math.min(state.y, globalThis.innerHeight - 280) });
   }, []);
 
   const handleCtxAction = useCallback((action: string) => {
@@ -315,6 +318,7 @@ export function LeftPanel() {
         </div>
         {activeSiteId && (
           <button
+            type="button"
             onClick={async () => {
               const title = prompt("Page title:"); if (!title) return;
               await actions.createPage(activeSiteId, title, title.toLowerCase().replace(/\s+/g, "-"), rootPage?.id);
@@ -358,8 +362,9 @@ export function LeftPanel() {
           <div className="grid grid-cols-3 gap-2 py-2">
             {schema.elementTypes.map((et) => {
               const Icon = getIcon(et.icon);
+              if (!Icon) return null;
               return (
-                <button key={et.type} onClick={() => handleAddElementToParent(et.type)}
+                <button type="button" key={et.type} onClick={() => handleAddElementToParent(et.type)}
                   className="flex flex-col items-center gap-1 rounded-lg border border-border/50 px-3 py-3 text-[10px] text-muted-foreground hover:border-editor-ring/30 hover:bg-editor-selected hover:text-editor-ring transition-colors">
                   <Icon className="h-4 w-4" /><span className="font-medium">{et.label}</span>
                 </button>
@@ -384,11 +389,12 @@ function PageNode({ node, style, dragHandle, onContextMenu }: NodeRendererProps<
         "flex items-center h-[26px] cursor-pointer group",
         selected ? "bg-editor-selected text-editor-ring" : "hover:bg-white/[0.04] text-foreground/70"
       )}
-      onClick={(e) => node.handleClick(e as any)}
+      onClick={(e) => node.handleClick(e as React.MouseEvent)}
       onContextMenu={(e) => onContextMenu(e, { x: e.clientX, y: e.clientY, kind: "page", id: node.id, isRoot: node.data.isRoot, name: node.data.name })}
     >
       {node.data.children?.length ? (
         <button
+          type="button"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); node.toggle(); }}
           className="flex items-center justify-center w-4 h-4 flex-shrink-0 rounded hover:bg-white/[0.06] transition-colors"
@@ -427,13 +433,14 @@ function ElementNode({ node, style, dragHandle, onContextMenu, onHover }: NodeRe
         "flex items-center h-[26px] cursor-pointer",
         selected ? "bg-editor-selected text-editor-ring" : "hover:bg-white/[0.04] text-foreground/60"
       )}
-      onClick={(e) => node.handleClick(e as any)}
+      onClick={(e) => node.handleClick(e as React.MouseEvent)}
       onMouseEnter={() => onHover(node.id)}
       onMouseLeave={() => onHover(null)}
       onContextMenu={(e) => onContextMenu(e, { x: e.clientX, y: e.clientY, kind: "element", id: node.id, isContainer: node.data.isContainer, name: node.data.label })}
     >
       {node.data.children?.length ? (
         <button
+          type="button"
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); node.toggle(); }}
           className="flex items-center justify-center w-4 h-4 flex-shrink-0 rounded hover:bg-white/[0.06] transition-colors"

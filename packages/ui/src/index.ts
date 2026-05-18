@@ -4,7 +4,6 @@ export { Input } from "./components/input";
 export {
   Dialog,
   DialogPortal,
-  DialogOverlay,
   DialogClose,
   DialogTrigger,
   DialogContent,

@@ -1,9 +1,10 @@
 console.log("Running Drizzle migrations...");
 try {
   const drizzleKit = await import("npm:drizzle-kit");
-  await drizzleKit.migrate({})(Deno.env.get("DATABASE_URL")!);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (drizzleKit as any).migrate({})(Deno.env.get("DATABASE_URL")!);
   console.log("Done.");
-} catch (e) {
-  console.error("Migration failed:", e.message);
+} catch (e: unknown) {
+  console.error("Migration failed:", (e as Error).message);
   Deno.exit(1);
 }

@@ -17,7 +17,7 @@ export function createField(
     }
     for (const [key, value] of Object.entries(rest)) {
       if (value !== undefined && !(key in base)) {
-        (base as any)[key] = value;
+        (base as unknown as Record<string, unknown>)[key] = value;
       }
     }
     return base;

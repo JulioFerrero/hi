@@ -80,6 +80,7 @@ export function TopBar() {
       <div className="mx-auto flex items-center gap-0.5 rounded-2xl bg-muted/80 p-1">
         {viewports.map(({ key, icon: Icon, label }) => (
           <button
+            type="button"
             key={key}
             title={label}
             className={cn(
@@ -96,6 +97,7 @@ export function TopBar() {
       </div>
       <div className="flex items-center gap-1">
         <button
+          type="button"
           className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 hover:bg-accent/50 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
           disabled={!canUndo()}
           onClick={undo}
@@ -104,6 +106,7 @@ export function TopBar() {
           <Undo2 className="h-4 w-4" />
         </button>
         <button
+          type="button"
           className="flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 hover:bg-accent/50 hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
           disabled={!canRedo()}
           onClick={redo}

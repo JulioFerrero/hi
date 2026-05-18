@@ -1,4 +1,3 @@
-import React from "react";
 import type { ElementProps } from "@hi/render";
 
 export function ShowcaseSection({ element, className, style, attrs }: ElementProps) {

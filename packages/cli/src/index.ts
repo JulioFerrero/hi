@@ -3,7 +3,7 @@ const COMMANDS = ["dev", "build", "start", "db:init", "db:migrate", "db:seed", "
 const args = Deno.args;
 const command = args[0];
 
-if (!command || !COMMANDS.includes(command as any)) {
+if (!command || !COMMANDS.includes(command as typeof COMMANDS[number])) {
   console.log(`Hi Editor CLI
   
 Usage: hi <command>

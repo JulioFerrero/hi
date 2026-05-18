@@ -1,4 +1,4 @@
-export default function AppWrapper({ Component }: { Component: any }) {
+export default function AppWrapper({ Component }: { Component: React.ComponentType }) {
   return (
     <html lang="en">
       <head>

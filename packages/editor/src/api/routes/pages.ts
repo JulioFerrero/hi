@@ -23,7 +23,7 @@ export const pagesRoute = new Hono()
     const siteId = c.req.query("siteId");
     if (!siteId) return c.json({ error: "siteId required" }, 400);
     const all = await db.select().from(pages).where(eq(pages.siteId, siteId));
-    const match = all.find((p) => (p.data as any)?.path === path);
+    const match = all.find((p) => (p.data as Record<string, unknown>)?.path === path);
     if (!match) return c.json({ error: "Not found" }, 404);
     return c.json(match);
   })
@@ -40,7 +40,7 @@ export const pagesRoute = new Hono()
         id: nanoid(),
         siteId: body.siteId,
         slug: body.slug,
-        data: (body.data ?? { title: body.slug, path: "/" + body.slug, status: "draft" }) as any,
+        data: (body.data ?? { title: body.slug, path: "/" + body.slug, status: "draft" }) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       }).returning();
       return c.json(row, 201);
     }
@@ -53,7 +53,7 @@ export const pagesRoute = new Hono()
     })),
     async (c) => {
       const body = c.req.valid("json");
-      const row = await updateById(pages, c.req.param("id"), { slug: body.slug, data: body.data as any });
+      const row = await updateById(pages, c.req.param("id"), { slug: body.slug, data: body.data as any }); // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!row) return c.json({ error: "Not found" }, 404);
       return c.json(row);
     }

@@ -1,4 +1,4 @@
-import type { EditorConfig, EditorSchema } from "../types";
+import type { EditorConfig } from "../types";
 
 export function defineConfig(config: EditorConfig): EditorConfig {
   return config;

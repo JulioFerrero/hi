@@ -23,7 +23,7 @@ export const filesRoute = new Hono()
       const [row] = await db.insert(files).values({
         id: nanoid(),
         siteId: body.siteId,
-        data: body.data as any,
+        data: body.data as any, // eslint-disable-line @typescript-eslint/no-explicit-any
       }).returning();
       return c.json(row, 201);
     }

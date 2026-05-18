@@ -43,8 +43,8 @@ export const elementsRoute = new Hono()
         pageId: body.pageId,
         parentId: body.parentId ?? null,
         type: body.type,
-        data: (body.data ?? {}) as any,
-        styles: (body.styles ?? {}) as any,
+        data: (body.data ?? {}) as Record<string, unknown>,
+        styles: (body.styles ?? {}) as Record<string, unknown>,
         order: body.order ?? 0,
       }).returning();
       return c.json(row, 201);

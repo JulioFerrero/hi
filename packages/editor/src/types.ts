@@ -39,7 +39,7 @@ export interface EditorSchema {
 }
 
 export interface EditorApi {
-  fetch: (path: string, init?: RequestInit) => Promise<any>;
+  fetch: (path: string, init?: RequestInit) => Promise<unknown>;
 }
 
 export interface RendererAdapter {
@@ -74,5 +74,5 @@ export interface EditorProps {
 export interface EditorConfig {
   database: { url: string };
   schema: EditorSchema;
-  renderer?: Record<string, ComponentType<any>>;
+  renderer?: Record<string, ComponentType<Record<string, unknown>>>;
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useCallback, useEffect, useState } from "react";
+import type React from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { useEditorStore } from "../../stores";
 import type { Viewport } from "../../types";
 import { useEditorContext } from "../../lib/context";
@@ -116,8 +117,8 @@ export function Canvas() {
         actions.deleteElement(sel);
       }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    globalThis.addEventListener("keydown", handler);
+    return () => globalThis.removeEventListener("keydown", handler);
   }, [actions]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -279,7 +280,7 @@ export function Canvas() {
     target.focus();
     const range = document.createRange();
     range.selectNodeContents(target);
-    const sel = window.getSelection();
+    const sel = globalThis.getSelection();
     sel?.removeAllRanges();
     sel?.addRange(range);
     editingRef.current = target;
@@ -345,11 +346,11 @@ export function Canvas() {
           <ElementToolbar pageId={activePageId} containerSet={containerSet} />
         </div>
         <div className="flex items-center gap-0.5 rounded-2xl bg-popover/80 backdrop-blur-sm px-3 py-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
-          <button onClick={handleZoomOut} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">−</button>
+          <button type="button" onClick={handleZoomOut} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">−</button>
           <span className="text-xs text-muted-foreground tabular-nums min-w-[36px] text-center">{zoom}%</span>
-          <button onClick={handleZoomIn} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">+</button>
+          <button type="button" onClick={handleZoomIn} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">+</button>
           <div className="w-px h-3 bg-border/60 mx-1" />
-          <button onClick={handleFitScreen} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">Fit</button>
+          <button type="button" onClick={handleFitScreen} className="rounded-lg px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">Fit</button>
         </div>
       </div>
     </div>
@@ -369,8 +370,10 @@ function ElementToolbar({ pageId, containerSet }: { pageId: string | null; conta
     <>
       {schema.elementTypes.map((et) => {
         const Icon = getIcon(et.icon);
+        if (!Icon) return null;
         return (
           <button
+            type="button"
             key={et.type}
             onClick={() => actions.addElement(pageId, et.type, parentId)}
             className="flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors duration-150"

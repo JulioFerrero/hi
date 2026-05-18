@@ -1,15 +1,16 @@
-import React from "react";
 import type { ElementProps } from "@hi/render";
+
 export function Button({ element, className, style, attrs }: ElementProps) {
+  const d = element.data as { href?: string; target?: string; content?: string };
   return (
     <a
       {...attrs}
-      href={element.data.href ?? "#"}
-      target={element.data.target}
+      href={d.href ?? "#"}
+      target={d.target}
       className={className}
       style={style}
     >
-      {element.data.content ?? "Button"}
+      {d.content ?? "Button"}
     </a>
   );
 }

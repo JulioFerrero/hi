@@ -1,4 +1,4 @@
-import { type StateCreator } from "zustand";
+import type { StateCreator } from "zustand";
 import type { RenderElement, PageItem, Viewport } from "../types";
 
 interface HistoryEntry {
@@ -81,7 +81,7 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
           ? {
               ...p,
               ...(updates.slug !== undefined ? { slug: updates.slug } : {}),
-              data: updates.data ? { ...p.data, ...updates.data } as any : p.data,
+              data: updates.data ? { ...p.data, ...updates.data } as PageItem["data"] : p.data,
             }
           : p
       ),

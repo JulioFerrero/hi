@@ -6,21 +6,21 @@ const api = createApiFetch();
 
 export function App() {
   const [siteId, setSiteId] = useState(() => {
-    const segments = window.location.pathname.split("/").filter(Boolean);
+    const segments = globalThis.location.pathname.split("/").filter(Boolean);
     return segments[0] || null;
   });
 
   useEffect(() => {
     function onPopState() {
-      const segments = window.location.pathname.split("/").filter(Boolean);
+      const segments = globalThis.location.pathname.split("/").filter(Boolean);
       setSiteId(segments[0] || null);
     }
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    globalThis.addEventListener("popstate", onPopState);
+    return () => globalThis.removeEventListener("popstate", onPopState);
   }, []);
 
   function navigateToSite(id: string) {
-    window.history.pushState({}, "", `/${id}`);
+    globalThis.history.pushState({}, "", `/${id}`);
     setSiteId(id);
   }
 

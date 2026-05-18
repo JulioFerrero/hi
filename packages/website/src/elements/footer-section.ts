@@ -1,4 +1,4 @@
-import { defineElement, textField, textareaField, urlField } from "@hi/editor";
+import { defineElement, textField, urlField } from "@hi/editor";
 
 export const footerSection = defineElement({
   type: "footer-section",

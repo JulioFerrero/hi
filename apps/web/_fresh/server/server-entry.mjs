@@ -2831,7 +2831,7 @@ if (typeof exports$9 === "object" && exports$9 !== null && "default" in exports$
   exports$9.default;
 }
 exports$9.__esModule;
-let BUILD_ID = "73e3dc2d210981a17f90cbfa0c8c6a30c9bb765e";
+let BUILD_ID = "b8ec3ab6999778eaf57f41bcef49ed3d747b0688";
 const DENO_DEPLOYMENT_ID = void 0;
 function setBuildId(id) {
   BUILD_ID = id;
@@ -6995,9 +6995,9 @@ function createTailwindGenerator(options2) {
   } = options2;
   const activeThemePath = stylesPath ?? themePath;
   return {
-    async generateCSS(classes, genPath = "_tw_gen.css") {
+    generateCSS(classes, genPath = "_tw_gen.css") {
       const sorted = [...new Set(classes)].sort();
-      if (sorted.length === 0) return "";
+      if (sorted.length === 0) return Promise.resolve("");
       return generateCSS(sorted, genPath, themePath);
     },
     htmlMiddleware() {
@@ -47193,8 +47193,8 @@ const fsRoute_1 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePro
   handler,
   handlers
 }, Symbol.toStringTag, { value: "Module" }));
-const clientEntry = "./assets/client-entry-DSjzT-fd.js";
-const version = "73e3dc2d210981a17f90cbfa0c8c6a30c9bb765e";
+const clientEntry = "./assets/client-entry-CHtxiN3G.js";
+const version = "b8ec3ab6999778eaf57f41bcef49ed3d747b0688";
 const islands = /* @__PURE__ */ new Map();
 const staticFiles = /* @__PURE__ */ new Map([
   ["/assets/fraunces-latin-400-normal-NUPT2cO8.woff", { "name": "/assets/fraunces-latin-400-normal-NUPT2cO8.woff", "hash": "695442434f77c44190b48a022f943e052bb60d49ed3c7940ea60a16ac3faf8b3", "filePath": "client/assets/fraunces-latin-400-normal-NUPT2cO8.woff", "contentType": "font/woff", "immutable": true }],
@@ -47209,14 +47209,14 @@ const staticFiles = /* @__PURE__ */ new Map([
   ["/assets/recursive-latin-ext-400-normal-BANRm9Vy.woff2", { "name": "/assets/recursive-latin-ext-400-normal-BANRm9Vy.woff2", "hash": "a904286bbccbbd947ae9a9042f3d329962deb71dc006dcc2b0b83b594fde7e56", "filePath": "client/assets/recursive-latin-ext-400-normal-BANRm9Vy.woff2", "contentType": "font/woff2", "immutable": true }],
   ["/assets/recursive-vietnamese-400-normal-Cpd2iHHU.woff", { "name": "/assets/recursive-vietnamese-400-normal-Cpd2iHHU.woff", "hash": "e5d8fdd7374961e071daae9c598abe0e646ee93a59c07b5ffba8080c5f691db0", "filePath": "client/assets/recursive-vietnamese-400-normal-Cpd2iHHU.woff", "contentType": "font/woff", "immutable": true }],
   ["/assets/recursive-vietnamese-400-normal-D7FuKHmj.woff2", { "name": "/assets/recursive-vietnamese-400-normal-D7FuKHmj.woff2", "hash": "7158c8944b30ea2d985189b263092e87571f439a9242cc225ca3cfc0de06cc70", "filePath": "client/assets/recursive-vietnamese-400-normal-D7FuKHmj.woff2", "contentType": "font/woff2", "immutable": true }],
-  ["/assets/client-entry-DSjzT-fd.js", { "name": "/assets/client-entry-DSjzT-fd.js", "hash": "0c83dda6707d70aaa9d3ced02c38272c7fbb80d206fcd8fb9a448d65ce2730f3", "filePath": "client/assets/client-entry-DSjzT-fd.js", "contentType": "text/javascript; charset=UTF-8", "immutable": true }],
+  ["/assets/client-entry-CHtxiN3G.js", { "name": "/assets/client-entry-CHtxiN3G.js", "hash": "2f1f1b6cee2ac6e1c58761b991090e8adb01f26bf2f549ccbd2bf80dd6067ea1", "filePath": "client/assets/client-entry-CHtxiN3G.js", "contentType": "text/javascript; charset=UTF-8", "immutable": true }],
   ["/assets/client-entry-BbACYtZI.css", { "name": "/assets/client-entry-BbACYtZI.css", "hash": "c20778397e8cc81fc5a40581bd3995ae5f5207833dd8311cd3c0967a81dcfd65", "filePath": "client/assets/client-entry-BbACYtZI.css", "contentType": "text/css; charset=UTF-8", "immutable": true }]
 ]);
 const entryAssets = ["/assets/client-entry-BbACYtZI.css"];
 const fsRoutes = [
   { id: "/_app", mod: fsRoute_0, type: "app", pattern: "*", routePattern: "*" },
   { id: "/_middleware", mod: fsRoute_1, type: "middleware", pattern: "/", routePattern: "/" },
-  { id: "/[[slug]]", mod: () => import("./assets/_fresh-route___slug_-CezRiDWQ.mjs"), type: "route", pattern: "/{:slug}?", routePattern: "/{:slug}?" }
+  { id: "/[[slug]]", mod: () => import("./assets/_fresh-route___slug_-DLTT7RnW.mjs"), type: "route", pattern: "/{:slug}?", routePattern: "/{:slug}?" }
 ];
 const snapshot = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,

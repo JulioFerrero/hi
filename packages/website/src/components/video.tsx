@@ -1,13 +1,14 @@
-import React from "react";
 import type { ElementProps } from "@hi/render";
+
 export function Video({ element, className, style, attrs }: ElementProps) {
+  const d = element.data as { src?: string; autoPlay?: boolean; loop?: boolean };
   return (
     <video
       {...attrs}
-      src={element.data.src}
+      src={d.src}
       controls
-      autoPlay={element.data.autoPlay as boolean}
-      loop={element.data.loop as boolean}
+      autoPlay={d.autoPlay}
+      loop={d.loop}
       className={className}
       style={style}
     />

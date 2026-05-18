@@ -29,7 +29,7 @@ function extractClasses(html: string): string[] {
   const classes = new Set<string>();
   let match;
   while ((match = CLASS_REGEX.exec(html)) !== null) {
-    for (const c of match[1].split(/\s+/)) {
+      for (const c of match[1]!.split(/\s+/)) {
       if (c) classes.add(c);
     }
   }
@@ -46,9 +46,9 @@ export function createTailwindGenerator(options: { themePath: string; stylesPath
   const activeThemePath = stylesPath ?? themePath;
 
   return {
-    async generateCSS(classes: string[], genPath = "_tw_gen.css"): Promise<string> {
+    generateCSS(classes: string[], genPath = "_tw_gen.css"): Promise<string> {
       const sorted = [...new Set(classes)].sort();
-      if (sorted.length === 0) return "";
+      if (sorted.length === 0) return Promise.resolve("");
       return generateCSS(sorted, genPath, themePath);
     },
 

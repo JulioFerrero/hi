@@ -6,7 +6,7 @@ import { Input } from "@hi/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription } from "@hi/ui/card";
 import { Plus, Globe } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@hi/ui/dialog";
-import React from "react";
+import type React from "react";
 import type { EditorApi } from "../types";
 
 interface DashboardProps {
@@ -20,17 +20,17 @@ export function Dashboard({ api, onSelectSite }: DashboardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    api.fetch("/sites").then(setSites);
+    api.fetch("/sites").then((data) => setSites(data as typeof sites));
   }, [api]);
 
   async function handleCreate() {
     if (!newName.trim()) return;
     const slug = newName.trim().toLowerCase().replace(/\s+/g, "-");
-    const site = await api.fetch("/sites", {
+    const site = (await api.fetch("/sites", {
       method: "POST",
       body: JSON.stringify({ slug, data: { name: newName.trim() } }),
-    });
-    setSites((prev) => [...prev, site as typeof prev[number]]);
+    })) as typeof sites[number];
+    setSites((prev) => [...prev, site]);
     setNewName("");
     setDialogOpen(false);
     onSelectSite(site.id);
@@ -67,6 +67,7 @@ export function Dashboard({ api, onSelectSite }: DashboardProps) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sites.map((site) => (
             <button
+              type="button"
               key={site.id}
               onClick={() => onSelectSite(site.id)}
               className="text-left"

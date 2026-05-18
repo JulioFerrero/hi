@@ -25,37 +25,25 @@ importers:
         specifier: ^5.8.0
         version: 5.9.3
 
-  packages/api:
+  packages/cli:
     dependencies:
       '@hi/database':
         specifier: workspace:*
         version: link:../database
-      '@hi/types':
+      '@hi/editor':
         specifier: workspace:*
-        version: link:../types
-      '@hono/zod-validator':
-        specifier: ^0.8.0
-        version: 0.8.0(hono@4.12.18)(zod@3.25.76)
+        version: link:../editor
+      '@hi/website':
+        specifier: workspace:*
+        version: link:../website
       drizzle-orm:
         specifier: ^0.43.0
         version: 0.43.1(postgres@3.4.9)
-      hono:
-        specifier: ^4.12.0
-        version: 4.12.18
-      nanoid:
-        specifier: ^5.1.5
-        version: 5.1.11
-      zod:
-        specifier: ^3.24.0
-        version: 3.25.76
 
   packages/config-tsconfig: {}
 
   packages/database:
     dependencies:
-      '@hi/types':
-        specifier: workspace:*
-        version: link:../types
       drizzle-orm:
         specifier: ^0.43.0
         version: 0.43.1(postgres@3.4.9)
@@ -127,6 +115,9 @@ importers:
 
   packages/render:
     dependencies:
+      hono:
+        specifier: ^4.12.0
+        version: 4.12.18
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -140,8 +131,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.1.0
         version: 19.2.3(@types/react@19.2.14)
-
-  packages/types: {}
 
   packages/ui:
     dependencies:
@@ -185,34 +174,19 @@ importers:
 
   packages/website:
     dependencies:
-      '@hi/database':
-        specifier: workspace:*
-        version: link:../database
       '@hi/editor':
         specifier: workspace:*
         version: link:../editor
       '@hi/render':
         specifier: workspace:*
         version: link:../render
-      '@hi/utils':
-        specifier: workspace:*
-        version: link:../utils
-      lucide-react:
-        specifier: ^0.509.0
-        version: 0.509.0(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.2.6(react@19.2.6)
     devDependencies:
       '@types/react':
         specifier: ^19.1.0
         version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.1.0
-        version: 19.2.3(@types/react@19.2.14)
 
 packages:
 

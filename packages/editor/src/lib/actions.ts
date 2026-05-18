@@ -1,7 +1,7 @@
 import { useEditorStore } from "../stores";
 import type { EditorApi, EditorSchema, RenderElement, PageItem } from "../types";
 
-function derivePath(slug: string, parentId: string | undefined, pages: PageItem[]): string {
+function _derivePath(slug: string, parentId: string | undefined, pages: PageItem[]): string {
   if (!parentId) return "/" + slug;
   const parent = pages.find((p) => p.id === parentId);
   if (!parent) return "/" + slug;
@@ -16,11 +16,11 @@ export function createEditorActions(api: EditorApi, schema: EditorSchema) {
   }
 
   return {
-    async loadSites() {
+    loadSites(): Promise<unknown> {
       return api.fetch("/sites");
     },
 
-    async createSite(name: string, slug: string) {
+    createSite(name: string, slug: string): Promise<unknown> {
       return api.fetch("/sites", {
         method: "POST",
         body: JSON.stringify({ slug, data: { name } }),
@@ -100,11 +100,11 @@ export function createEditorActions(api: EditorApi, schema: EditorSchema) {
     },
 
     updateElementData(id: string, data: Record<string, unknown>) {
-      store.getState().updateElement(id, { data: data as any });
+      store.getState().updateElement(id, { data: data as Record<string, unknown> });
     },
 
     updateElementStyles(id: string, styles: Record<string, unknown>) {
-      store.getState().updateElement(id, { styles: styles as any });
+      store.getState().updateElement(id, { styles: styles as Record<string, unknown> });
     },
 
     async deleteElement(id: string) {

@@ -2,12 +2,13 @@ import { defineConfig, type Plugin } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { denoWorkspacePlugin } from "./vite-plugin-deno.ts";
+import { Buffer } from "node:buffer";
 
 const root = resolve(import.meta.dirname, "../..");
 
 function apiPlugin(): Plugin {
-  let apiApp: any;
-  let tailwindFn: any;
+  let apiApp: ReturnType<typeof Object>;
+  let tailwindFn: ReturnType<typeof Object>;
 
   return {
     name: "hi-api-middleware",

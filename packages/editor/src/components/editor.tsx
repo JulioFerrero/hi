@@ -53,8 +53,8 @@ function EditorInner({ siteId }: { siteId: string }) {
         if (s.isDirty && s.saveStatus !== "saving") actions.saveAll();
       }
     }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [actions]);
 
   return <EditorShell />;

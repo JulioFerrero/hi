@@ -7,7 +7,7 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 
 const TooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Popup>
+  React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Popup> & { sideOffset?: number }
 >(({ className, sideOffset = 4, ...props }, ref) => (
   <TooltipPrimitive.Portal>
     <TooltipPrimitive.Positioner sideOffset={sideOffset}>
