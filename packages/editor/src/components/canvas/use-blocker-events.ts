@@ -1,12 +1,13 @@
 import { useRef, useEffect, useCallback } from "react";
 import { useEditorStore } from "../../stores";
-
-function applyOutline(el: HTMLElement | null, type: "hover" | "selected" | "none") {
-  if (!el) return;
-  if (type === "none") { el.style.outline = ""; el.style.outlineOffset = ""; }
-  else if (type === "hover") { el.style.outline = "1px solid rgba(129, 140, 248, 0.5)"; el.style.outlineOffset = "-1px"; }
-  else { el.style.outline = "2px solid #818cf8"; el.style.outlineOffset = "-1px"; }
-}
+import type { EditorActions } from "../../lib/actions";
+import type { CursorMode } from "./canvas-cursor";
+import {
+  applyOutline,
+  queryElementAtPoint as queryElAtPoint,
+  querySelectedOutline,
+} from "./canvas-helpers";
+import { useInlineEditing } from "./use-inline-editing";
 
 export function useBlockerEvents(
   blockerRef: React.RefObject<HTMLDivElement | null>,
@@ -14,63 +15,24 @@ export function useBlockerEvents(
   toolbarRef: React.RefObject<HTMLDivElement | null>,
   transformRef: React.RefObject<{ x: number; y: number; scale: number }>,
   isNativeDrag: React.RefObject<boolean>,
-  actions: any,
+  actions: EditorActions,
   selectElement: (id: string | null) => void,
   editableTypes: Set<string>,
   applyTransform: () => void,
-  setCursorMode: (m: any) => void,
+  setCursorMode: (m: CursorMode) => void,
 ) {
   const isDragging = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
   const lastHoveredRef = useRef<HTMLElement | null>(null);
   const lastSelectedRef = useRef<HTMLElement | null>(null);
-  const editingRef = useRef<HTMLElement | null>(null);
 
-  const queryElementAtPoint = useCallback((screenX: number, screenY: number): { el: HTMLElement } | null => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return null;
-    const iframes = Array.from(wrapper.querySelectorAll("iframe"));
-    const t = transformRef.current;
-    for (const iframe of iframes) {
-      const rect = iframe.getBoundingClientRect();
-      const px = (screenX - rect.left) / t.scale;
-      const py = (screenY - rect.top) / t.scale;
-      const doc = iframe.contentDocument;
-      if (!doc) continue;
-      const hit = doc.elementFromPoint(px, py)?.closest("[data-el-id]") as HTMLElement | null;
-      if (hit) return { el: hit };
-    }
-    return null;
-  }, []);
+  const queryElementAtPoint = useCallback((screenX: number, screenY: number) => {
+    return queryElAtPoint(wrapperRef, transformRef, screenX, screenY);
+  }, [wrapperRef, transformRef]);
 
-  const finishInlineEdit = useCallback(() => {
-    const target = editingRef.current;
-    if (!target) return;
-    target.contentEditable = "false";
-    target.style.cursor = "";
-    const elId = target.getAttribute("data-el-id")!;
-    actions.updateElementData(elId, { content: target.innerText });
-    editingRef.current = null;
-    setCursorMode("default");
-  }, [actions]);
-
-  const startInlineEdit = useCallback((target: HTMLElement) => {
-    target.contentEditable = "true";
-    target.style.outline = "2px solid #818cf8";
-    target.style.cursor = "text";
-    target.focus();
-    const doc = target.ownerDocument;
-    const win = doc.defaultView;
-    if (win) {
-      const range = doc.createRange();
-      range.selectNodeContents(target);
-      const sel = win.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-    }
-    editingRef.current = target;
-    setCursorMode("text");
-  }, []);
+  const { editingRef, finishInlineEdit, handleDoubleClick } = useInlineEditing(
+    actions, editableTypes, setCursorMode
+  );
 
   useEffect(() => {
     const blocker = blockerRef.current;
@@ -130,13 +92,7 @@ export function useBlockerEvents(
     };
 
     const onDblClick = (e: MouseEvent) => {
-      const hit = queryElementAtPoint(e.clientX, e.clientY);
-      if (!hit) return;
-      const elId = hit.el.getAttribute("data-el-id")!;
-      const el = useEditorStore.getState().elements.find((e) => e.id === elId);
-      if (!el || !editableTypes.has(el.type)) return;
-      selectElement(elId);
-      startInlineEdit(hit.el);
+      handleDoubleClick(e, queryElementAtPoint);
     };
 
     blocker.addEventListener("mousedown", onMouseDown);
@@ -149,19 +105,12 @@ export function useBlockerEvents(
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [queryElementAtPoint, applyTransform, selectElement, finishInlineEdit, startInlineEdit, editableTypes]);
+  }, [queryElementAtPoint, applyTransform, selectElement, finishInlineEdit, handleDoubleClick, editableTypes]);
 
   useEffect(() => {
     if (lastSelectedRef.current) applyOutline(lastSelectedRef.current, "none");
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    const docs = Array.from(wrapper.querySelectorAll("iframe")).map((f) => f.contentDocument).filter(Boolean) as Document[];
-    for (const doc of docs) {
-      if (useEditorStore.getState().selectedElementId) {
-        const el = doc.querySelector(`[data-el-id="${useEditorStore.getState().selectedElementId}"]`) as HTMLElement | null;
-        if (el) { applyOutline(el, "selected"); lastSelectedRef.current = el; return; }
-      }
-    }
+    const el = querySelectedOutline(wrapperRef, useEditorStore.getState().selectedElementId);
+    if (el) { applyOutline(el, "selected"); lastSelectedRef.current = el; return; }
     if (!useEditorStore.getState().selectedElementId) lastSelectedRef.current = null;
   }, [useEditorStore.getState().selectedElementId, useEditorStore.getState().elements]);
 

@@ -1,11 +1,8 @@
 import type { StateCreator } from "zustand";
 import type { RenderElement, PageItem, Viewport } from "../types";
-
-interface HistoryEntry {
-  elements: RenderElement[];
-  pages: PageItem[];
-  selectedElementId: string | null;
-}
+import type { HistoryEntry } from "./history";
+import { computeUndo, computeRedo, canUndo, canRedo } from "./history";
+import { computeReorder, computeMove } from "./element-operations";
 
 export type SaveStatus = "idle" | "saving" | "saved";
 
@@ -52,21 +49,19 @@ export interface EditorActions {
 
 export type EditorStore = EditorState & EditorActions;
 
-const MAX_HISTORY = 50;
-
 export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
   activeSiteId: null,
   activePageId: null,
   selectedElementId: null,
   hoveredElementId: null,
-  viewport: "desktop",
+  viewport: "desktop" as Viewport,
   pages: [],
   dirtyPageIds: new Set<string>(),
   dirtyElementIds: new Set<string>(),
   elements: [],
   isDirty: false,
   isLoading: false,
-  saveStatus: "idle",
+  saveStatus: "idle" as SaveStatus,
   _history: [],
   _historyIndex: -1,
 
@@ -114,85 +109,19 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
     })),
   reorderElement: (id, direction) =>
     set((s) => {
-      const el = s.elements.find((e) => e.id === id);
-      if (!el) return s;
-      const siblings = s.elements.filter((e) => e.parentId === el.parentId).sort((a, b) => a.order - b.order);
-      const idx = siblings.findIndex((e) => e.id === id);
-      if (idx < 0) return s;
-      const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-      if (swapIdx < 0 || swapIdx >= siblings.length) return s;
-      const swapEl = siblings[swapIdx]!;
-      const updated = s.elements.map((e) => {
-        if (e.id === id) return { ...e, order: swapEl.order };
-        if (e.id === swapEl.id) return { ...e, order: el.order };
-        return e;
-      });
-      const prev = { elements: s.elements, pages: s.pages, selectedElementId: s.selectedElementId };
-      const newHistory = s._historyIndex < s._history.length - 1
-        ? s._history.slice(0, s._historyIndex + 1)
-        : s._history;
-      return {
-        elements: updated,
-        isDirty: true,
-        _history: [...newHistory, prev].slice(-MAX_HISTORY),
-        _historyIndex: Math.min(newHistory.length, MAX_HISTORY - 1),
-      };
+      const result = computeReorder(s, id, direction);
+      return result ?? {};
     }),
   moveElement: (id, newParentId, index) =>
     set((s) => {
-      const el = s.elements.find((e) => e.id === id);
-      if (!el) return s;
-      const prev = { elements: s.elements, pages: s.pages, selectedElementId: s.selectedElementId };
-      const newHistory = s._historyIndex < s._history.length - 1
-        ? s._history.slice(0, s._historyIndex + 1)
-        : s._history;
-      const siblings = s.elements.filter(
-        (e) => e.parentId === newParentId && e.id !== id
-      ).sort((a, b) => a.order - b.order);
-      const reordered = siblings.slice(0, index).concat([el, ...siblings.slice(index)]);
-      const updated = s.elements.map((e) => {
-        if (e.id === id) return { ...e, parentId: newParentId, order: index };
-        const sibIdx = reordered.findIndex((r) => r.id === e.id);
-        if (sibIdx >= 0) return { ...e, order: sibIdx };
-        return e;
-      });
-      return {
-        elements: updated,
-        isDirty: true,
-        _history: [...newHistory, prev].slice(-MAX_HISTORY),
-        _historyIndex: Math.min(newHistory.length, MAX_HISTORY - 1),
-      };
+      const result = computeMove(s, id, newParentId, index);
+      return result ?? {};
     }),
   setDirty: (dirty) => set((s) => ({ isDirty: dirty, saveStatus: dirty ? "idle" : s.saveStatus })),
   setLoading: (loading) => set({ isLoading: loading }),
   setSaveStatus: (status) => set({ saveStatus: status }),
-  undo: () =>
-    set((s) => {
-      if (s._historyIndex < 0) return s;
-      const entry = s._history[s._historyIndex];
-      if (!entry) return s;
-      return {
-        elements: entry.elements,
-        pages: entry.pages,
-        selectedElementId: entry.selectedElementId,
-        isDirty: true,
-        _historyIndex: s._historyIndex - 1,
-      };
-    }),
-  redo: () =>
-    set((s) => {
-      const nextIndex = s._historyIndex + 1;
-      if (nextIndex >= s._history.length) return s;
-      const entry = s._history[nextIndex];
-      if (!entry) return s;
-      return {
-        elements: entry.elements,
-        pages: entry.pages,
-        selectedElementId: entry.selectedElementId,
-        isDirty: true,
-        _historyIndex: nextIndex,
-      };
-    }),
-  canUndo: () => get()._historyIndex >= 0,
-  canRedo: () => get()._historyIndex + 1 < get()._history.length,
+  undo: () => set((s) => computeUndo(s) ?? {}),
+  redo: () => set((s) => computeRedo(s) ?? {}),
+  canUndo: () => canUndo(get()),
+  canRedo: () => canRedo(get()),
 });

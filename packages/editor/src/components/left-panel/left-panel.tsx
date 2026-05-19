@@ -1,31 +1,21 @@
-"use client";
-
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useEditorStore } from "../../stores";
 import { useEditorContext } from "../../lib/context";
 import { buildTree } from "@hi/render";
 import type { RenderElement, PageItem } from "../../types";
-import { cn } from "@hi/utils";
-import { Tree, type NodeRendererProps, type NodeApi } from "react-arborist";
+import { Tree, type NodeApi } from "react-arborist";
 import {
   Plus,
-  Trash2,
   File,
-  Pencil,
-  ChevronRight,
-  Copy,
-  ArrowUp,
-  ArrowDown,
   Layers,
 } from "lucide-react";
-import { getIcon } from "../../icons";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@hi/ui/dialog";
+import { CollapsibleSection, type CtxMenuState } from "./collapsible-section";
+import { CtxMenu } from "./context-menu";
+import { PageNode } from "./page-node";
+import { ElementNode } from "./element-node";
+import { AddElementDialog } from "./add-element-dialog";
+import { derivePath } from "../../lib/paths";
+import { countNodes } from "./utils";
 
 interface PageTreeData {
   id: string;
@@ -44,131 +34,6 @@ interface ElementTreeData {
   content: string;
   isContainer: boolean;
   children?: ElementTreeData[];
-}
-
-interface CtxMenuState {
-  x: number;
-  y: number;
-  kind: "page" | "element";
-  id: string;
-  isRoot?: boolean;
-  isContainer?: boolean;
-  name?: string;
-}
-
-function derivePath(slug: string, parentId: string | undefined, pages: PageItem[]): string {
-  if (!parentId) return "/" + slug;
-  const parent = pages.find((p) => p.id === parentId);
-  if (!parent) return "/" + slug;
-  return parent.data.path.replace(/\/$/, "") + "/" + slug;
-}
-
-function CollapsibleSection({
-  title,
-  icon: Icon,
-  defaultOpen = true,
-  children,
-}: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 w-full px-3 py-1.5 text-left hover:bg-white/[0.04] transition-colors"
-      >
-        <ChevronRight
-          className={cn(
-            "h-3 w-3 text-white/30 transition-transform duration-150 flex-shrink-0",
-            open && "rotate-90"
-          )}
-        />
-        <Icon className="h-3 w-3 text-white/40 flex-shrink-0" />
-        <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-white/50">{title}</span>
-      </button>
-      <div
-        className={cn(
-          "grid transition-[grid-template-rows] duration-150 ease-out",
-          open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        )}
-      >
-        <div className="overflow-hidden">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function CtxMenu({
-  menu,
-  onClose,
-  onAction,
-}: {
-  menu: CtxMenuState;
-  onClose: () => void;
-  onAction: (action: string) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    const keyHandler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("mousedown", handler);
-    document.addEventListener("keydown", keyHandler);
-    return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("keydown", keyHandler); };
-  }, [onClose]);
-
-  const isPage = menu.kind === "page";
-  const items = isPage
-    ? [
-        { action: "add-child", label: "Add sub-page", icon: Plus, destructive: false },
-        ...(!menu.isRoot
-          ? [
-              { action: "rename", label: "Rename", icon: Pencil, destructive: false },
-              { action: "delete", label: "Delete", icon: Trash2, destructive: true },
-            ]
-          : []),
-      ]
-    : [
-        ...(menu.isContainer ? [{ action: "add-child", label: "Add child", icon: Plus, destructive: false }] : []),
-        { action: "duplicate", label: "Duplicate", icon: Copy, destructive: false },
-        { action: "move-up", label: "Move up", icon: ArrowUp, destructive: false },
-        { action: "move-down", label: "Move down", icon: ArrowDown, destructive: false },
-        { action: "delete", label: "Delete", icon: Trash2, destructive: true },
-      ];
-
-  return (
-    <div
-      ref={ref}
-      className="fixed z-50 min-w-[140px] rounded-lg border border-white/10 bg-black/80 backdrop-blur-xl p-1 shadow-xl"
-      style={{ left: menu.x, top: menu.y, animation: "animate-in 80ms ease-out both" }}
-    >
-      {items.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            type="button"
-            key={item.action}
-            onClick={(e) => { e.stopPropagation(); onAction(item.action); onClose(); }}
-            className={cn(
-              "flex w-full items-center gap-2 rounded px-2 py-1 text-[11px] transition-colors",
-              item.destructive ? "text-destructive hover:bg-destructive/10" : "text-white/80 hover:bg-white/10"
-            )}
-          >
-            <Icon className="h-3 w-3 opacity-60" />
-            <span>{item.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 const ROW_H = 26;
@@ -246,13 +111,6 @@ export function LeftPanel() {
 
   const handlePageDelete = useCallback(({ ids }: { ids: string[] }) => { for (const id of ids) actions.deletePage(id); }, [actions]);
   const handlePageSelect = useCallback((nodes: NodeApi<PageTreeData>[]) => { if (nodes.length > 0 && nodes[0]) setActivePage(nodes[0].id); }, [setActivePage]);
-
-  type TreeNode = { children?: TreeNode[] };
-  const countNodes = (nodes: TreeNode[]): number => {
-    let n = 0;
-    for (const nd of nodes) { n += 1; if (nd.children?.length) n += countNodes(nd.children); }
-    return n;
-  };
 
   const pageVisibleCount = useMemo(() => countNodes(pageTreeData), [pageTreeData]);
   const elementVisibleCount = useMemo(() => countNodes(elementTreeData), [elementTreeData]);
@@ -357,104 +215,12 @@ export function LeftPanel() {
 
       {ctxMenu && <CtxMenu menu={ctxMenu} onClose={() => setCtxMenu(null)} onAction={handleCtxAction} />}
 
-      <Dialog open={addElementParentId !== null} onOpenChange={(o) => { if (!o) setAddElementParentId(null); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Add Element</DialogTitle><DialogDescription>Choose a type to add.</DialogDescription></DialogHeader>
-          <div className="grid grid-cols-3 gap-2 py-2">
-            {schema.elementTypes.map((et) => {
-              const Icon = getIcon(et.icon);
-              if (!Icon) return null;
-              return (
-                <button type="button" key={et.type} onClick={() => handleAddElementToParent(et.type)}
-                  className="flex flex-col items-center gap-1 rounded-lg border border-white/10 px-3 py-3 text-[10px] text-white/60 hover:border-editor-ring/30 hover:bg-editor-selected hover:text-editor-ring transition-colors">
-                  <Icon className="h-4 w-4" /><span className="font-medium">{et.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
-      </div>
-    </div>
-  );
-}
-
-function PageNode({ node, style, dragHandle, onContextMenu }: NodeRendererProps<PageTreeData> & {
-  onContextMenu: (e: React.MouseEvent, s: CtxMenuState) => void;
-}) {
-  const selected = node.state.isSelected;
-  return (
-    <div
-      ref={dragHandle}
-      style={style}
-      className={cn(
-        "flex items-center h-[26px] cursor-pointer group",
-        selected ? "bg-editor-selected text-editor-ring" : "hover:bg-white/[0.04] text-white/70"
-      )}
-      onClick={(e) => node.handleClick(e as React.MouseEvent)}
-      onContextMenu={(e) => onContextMenu(e, { x: e.clientX, y: e.clientY, kind: "page", id: node.id, isRoot: node.data.isRoot, name: node.data.name })}
-    >
-      {node.data.children?.length ? (
-        <button
-          type="button"
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); node.toggle(); }}
-          className="flex items-center justify-center w-4 h-4 flex-shrink-0 rounded hover:bg-white/[0.06] transition-colors"
-        >
-          <ChevronRight className={cn("h-2.5 w-2.5 text-white/30 transition-transform duration-150", node.isOpen && "rotate-90")} />
-        </button>
-      ) : (
-        <span className="w-4 flex-shrink-0" />
-      )}
-      <File className="h-3 w-3 flex-shrink-0 text-white/20 mr-1" />
-      <div className="min-w-0 flex-1">
-        {node.state.isEditing ? (
-          <input className="min-w-0 w-full rounded border border-white/10 px-1 py-0 text-[11px] outline-none bg-white/[0.06] text-white/90" defaultValue={node.data.name} autoFocus
-            onBlur={(e) => node.submit(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") node.submit((e.target as HTMLInputElement).value); if (e.key === "Escape") node.reset(); }}
-          />
-        ) : (
-          <span className="truncate text-[11px] leading-none">{node.data.name}</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ElementNode({ node, style, dragHandle, onContextMenu, onHover }: NodeRendererProps<ElementTreeData> & {
-  onContextMenu: (e: React.MouseEvent, s: CtxMenuState) => void;
-  onHover: (id: string | null) => void;
-}) {
-  const Icon = getIcon(node.data.icon) ?? File;
-  const selected = node.state.isSelected;
-  return (
-    <div
-      ref={dragHandle}
-      style={style}
-      className={cn(
-        "flex items-center h-[26px] cursor-pointer",
-        selected ? "bg-editor-selected text-editor-ring" : "hover:bg-white/[0.04] text-white/50"
-      )}
-      onClick={(e) => node.handleClick(e as React.MouseEvent)}
-      onMouseEnter={() => onHover(node.id)}
-      onMouseLeave={() => onHover(null)}
-      onContextMenu={(e) => onContextMenu(e, { x: e.clientX, y: e.clientY, kind: "element", id: node.id, isContainer: node.data.isContainer, name: node.data.label })}
-    >
-      {node.data.children?.length ? (
-        <button
-          type="button"
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); node.toggle(); }}
-          className="flex items-center justify-center w-4 h-4 flex-shrink-0 rounded hover:bg-white/[0.06] transition-colors"
-        >
-          <ChevronRight className={cn("h-2.5 w-2.5 text-white/30 transition-transform duration-150", node.isOpen && "rotate-90")} />
-        </button>
-      ) : (
-        <span className="w-4 flex-shrink-0" />
-      )}
-      <Icon className="h-3 w-3 flex-shrink-0 text-white/20 mr-1" />
-      <div className="min-w-0 flex-1">
-        <span className="truncate text-[11px] leading-none">{node.data.label}</span>
+      <AddElementDialog
+        open={addElementParentId !== null}
+        onOpenChange={(o) => { if (!o) setAddElementParentId(null); }}
+        elementTypes={schema.elementTypes}
+        onSelect={handleAddElementToParent}
+      />
       </div>
     </div>
   );
