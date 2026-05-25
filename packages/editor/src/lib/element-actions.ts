@@ -12,7 +12,9 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
     async loadElements(pageId: string) {
       store.getState().setLoading(true);
       const elements = (await api.fetch(`/elements?pageId=${pageId}`)) as RenderElement[];
+      const hasPendingChanges = elements.some((el) => el.status === "modified" || el.status === "draft");
       store.getState().setElements(elements);
+      store.getState().setHasActiveDraft(hasPendingChanges);
       store.getState().setLoading(false);
       return elements;
     },
@@ -34,6 +36,7 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
           data: config?.defaultData ?? {},
           styles: config?.defaultStyles ?? {},
           order: maxOrder + 1,
+          status: "draft",
         }),
       })) as RenderElement;
 
@@ -41,6 +44,7 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
         elements: [...s.elements, element],
         dirtyElementIds: new Set([...s.dirtyElementIds, element.id]),
         isDirty: true,
+        hasActiveDraft: true,
         selectedElementId: element.id,
       }));
       return element;
@@ -55,7 +59,16 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
     },
 
     async deleteElement(id: string) {
-      await api.fetch(`/elements/${id}`, { method: "DELETE" });
+      const state = store.getState();
+      const el = state.elements.find((e) => e.id === id);
+      if (!el) return;
+
+      if (el.status === "draft") {
+        try {
+          await api.fetch(`/elements/${id}`, { method: "DELETE" });
+        } catch { /* may not exist yet */ }
+      }
+
       store.getState().removeElement(id);
     },
 
@@ -77,18 +90,14 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
         const created = (await api.fetch("/elements", {
           method: "POST",
           body: JSON.stringify({
-            pageId,
-            type: src.type,
-            parentId: newParentId,
-            data: { ...src.data },
-            styles: { ...src.styles },
-            order: isRoot ? maxOrder + 1 : src.order,
+            pageId, type: src.type, parentId: newParentId,
+            data: { ...src.data }, styles: { ...src.styles },
+            order: isRoot ? maxOrder + 1 : src.order, status: "draft",
           }),
         })) as RenderElement;
         allClones.push(created);
-        const children = state.elements.filter((e) => e.parentId === src.id);
-        for (const child of children) {
-          await cloneTree(child.id, created.id, false);
+        for (const child of state.elements) {
+          if (child.parentId === src.id) await cloneTree(child.id, created.id, false);
         }
       }
 
@@ -96,7 +105,7 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
       store.setState((s) => ({
         elements: [...s.elements, ...allClones],
         dirtyElementIds: new Set([...s.dirtyElementIds, ...allClones.map((e) => e.id)]),
-        isDirty: true,
+        isDirty: true, hasActiveDraft: true,
         selectedElementId: allClones[0]?.id ?? s.selectedElementId,
       }));
       return allClones;

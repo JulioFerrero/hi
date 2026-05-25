@@ -1,7 +1,7 @@
 import React from "react";
 import { useEditorStore } from "../../stores";
 import { useEditorContext } from "../../lib/context";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, Upload, RotateCcw } from "lucide-react";
 import { IconBtn, CompactInput, Label, Btn, BtnGroup, SectionLabel } from "./primitives";
 import { ContentField } from "./content-field";
 import { StyleGroup } from "./style-group";
@@ -12,6 +12,7 @@ export function RightPanel() {
   const elements = useEditorStore((s) => s.elements);
   const activePageId = useEditorStore((s) => s.activePageId);
   const pages = useEditorStore((s) => s.pages);
+  const hasActiveDraft = useEditorStore((s) => s.hasActiveDraft);
   const updatePageLocal = useEditorStore((s) => s.updatePageLocal);
   const { schema, actions } = useEditorContext();
 
@@ -40,6 +41,29 @@ export function RightPanel() {
                   ))}
                 </BtnGroup>
               </div>
+              {hasActiveDraft && (
+                <div className="pt-1 space-y-1.5">
+                  <button
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white text-black px-3 py-1.5 text-xs font-medium hover:bg-white/90 transition-colors"
+                    onClick={() => actions.publishPage()}
+                  >
+                    <Upload className="h-3 w-3" />
+                    Publish Now
+                  </button>
+                  <button
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 text-xs font-medium hover:bg-red-500/20 transition-colors"
+                    onClick={() => {
+                      actions.discardDraft().then(() => {
+                        const pageId = useEditorStore.getState().activePageId;
+                        if (pageId) actions.loadElements(pageId);
+                      });
+                    }}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Discard Draft
+                  </button>
+                </div>
+              )}
             </div>
           </>
         ) : (

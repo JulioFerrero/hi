@@ -3,7 +3,7 @@ import { define } from "../utils.ts";
 import { PageRenderer, type RenderElement } from "@hi/website";
 import { db } from "@hi/database";
 import { pages, elements } from "@hi/database";
-import { eq, asc } from "drizzle-orm";
+import { eq, and, or, asc } from "drizzle-orm";
 import { resolvePageReferences } from "../../../packages/website/src/lib/references.ts";
 
 type PageData = { error: string | null; elements: RenderElement[] | null };
@@ -31,15 +31,18 @@ export const handler = define.handlers({
     }
 
     const pageElements = await db.select().from(elements)
-      .where(eq(elements.pageId, found.id))
+      .where(and(
+        eq(elements.pageId, found.id),
+        or(eq(elements.status, "published"), eq(elements.status, "modified")),
+      ))
       .orderBy(asc(elements.order));
 
     const renderElements: RenderElement[] = pageElements.map((e) => ({
       id: e.id,
       parentId: e.parentId,
       type: e.type,
-      data: e.data ?? {},
-      styles: e.styles ?? {},
+      data: (e.pubData ?? e.data ?? {}) as Record<string, unknown>,
+      styles: (e.pubStyles ?? e.styles ?? {}) as Record<string, unknown>,
       order: e.order,
     }));
 

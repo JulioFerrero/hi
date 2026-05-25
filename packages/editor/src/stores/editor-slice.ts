@@ -17,6 +17,7 @@ export interface EditorState {
   dirtyElementIds: Set<string>;
   elements: RenderElement[];
   isDirty: boolean;
+  hasActiveDraft: boolean;
   isLoading: boolean;
   saveStatus: SaveStatus;
   _history: HistoryEntry[];
@@ -41,6 +42,8 @@ export interface EditorActions {
   setDirty: (dirty: boolean) => void;
   setLoading: (loading: boolean) => void;
   setSaveStatus: (status: SaveStatus) => void;
+  setHasActiveDraft: (hasDraft: boolean) => void;
+  markElementStale: (id: string) => void;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
@@ -60,6 +63,7 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
   dirtyElementIds: new Set<string>(),
   elements: [],
   isDirty: false,
+  hasActiveDraft: false,
   isLoading: false,
   saveStatus: "idle" as SaveStatus,
   _history: [],
@@ -91,6 +95,7 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
       elements: s.elements.map((e) => (e.id === id ? { ...e, ...updates } : e)),
       dirtyElementIds: new Set([...s.dirtyElementIds, id]),
       isDirty: true,
+      hasActiveDraft: true,
     })),
   addElement: (element) =>
     set((s) => ({ elements: [...s.elements, element], dirtyElementIds: new Set([...s.dirtyElementIds, element.id]), isDirty: true })),
@@ -100,6 +105,7 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
       selectedElementId: s.selectedElementId === id ? null : s.selectedElementId,
       dirtyElementIds: new Set([...s.dirtyElementIds].filter((d) => d !== id)),
       isDirty: true,
+      hasActiveDraft: true,
     })),
   insertElements: (newElements) =>
     set((s) => ({
@@ -120,6 +126,12 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
   setDirty: (dirty) => set((s) => ({ isDirty: dirty, saveStatus: dirty ? "idle" : s.saveStatus })),
   setLoading: (loading) => set({ isLoading: loading }),
   setSaveStatus: (status) => set({ saveStatus: status }),
+  setHasActiveDraft: (hasDraft) => set({ hasActiveDraft: hasDraft }),
+  markElementStale: (id) =>
+    set((s) => ({
+      dirtyElementIds: new Set([...s.dirtyElementIds, id]),
+      isDirty: true,
+    })),
   undo: () => set((s) => computeUndo(s) ?? {}),
   redo: () => set((s) => computeRedo(s) ?? {}),
   canUndo: () => canUndo(get()),

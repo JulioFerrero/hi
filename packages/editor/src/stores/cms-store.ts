@@ -1,4 +1,7 @@
 import { create } from "zustand";
+import type { CmsFieldConfig } from "@hi/cms";
+
+export type { CmsFieldConfig };
 
 interface SItem {
   type: string;
@@ -9,20 +12,6 @@ interface SItem {
 }
 
 type NavPath = number[];
-
-export interface CmsFieldConfig {
-  name: string;
-  label: string;
-  type: string;
-  required?: boolean;
-  default?: unknown;
-  options?: string[];
-  collection?: string;
-  multiple?: boolean;
-  of?: CmsFieldConfig[];
-  preview?: string;
-  [key: string]: unknown;
-}
 
 export interface CmsCollectionItem {
   id: string;

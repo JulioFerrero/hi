@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { CollectionConfig, StructureItem } from "@hi/cms";
+import type { RenderElement as BaseRenderElement } from "@hi/render";
 
 export interface FieldConfig {
   name: string;
@@ -57,14 +58,10 @@ export interface PageItem {
   data: { title: string; path: string; status: string; parentId?: string; order?: number; [key: string]: unknown };
 }
 
-export interface RenderElement {
-  id: string;
-  parentId: string | null;
-  type: string;
-  data: Record<string, unknown>;
-  styles: Record<string, unknown>;
-  order: number;
-  children?: RenderElement[];
+export interface RenderElement extends BaseRenderElement {
+  pubData?: Record<string, unknown>;
+  pubStyles?: Record<string, unknown>;
+  status?: string;
 }
 
 export type Viewport = "desktop" | "tablet" | "mobile";

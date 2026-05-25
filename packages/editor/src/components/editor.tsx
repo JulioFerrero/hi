@@ -34,6 +34,7 @@ function EditorInner({ siteId }: { siteId: string }) {
   const { actions } = useEditorContext();
   const activePageId = useEditorStore((s) => s.activePageId);
   const prevPageRef = useRef<string | null>(activePageId);
+  const isDirty = useEditorStore((s) => s.isDirty);
 
   useCmsSync();
 
@@ -49,11 +50,19 @@ function EditorInner({ siteId }: { siteId: string }) {
   }, [activePageId, actions]);
 
   useEffect(() => {
+    if (isDirty) {
+      actions.scheduleAutoSave();
+    }
+  }, [isDirty]);
+
+  useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
         const s = useEditorStore.getState();
-        if (s.isDirty && s.saveStatus !== "saving") actions.saveAll();
+        if (s.isDirty) {
+          actions.saveAll();
+        }
       }
     }
     globalThis.addEventListener("keydown", onKey);

@@ -35,17 +35,24 @@ export const elementsRoute = new Hono()
       data: z.record(z.unknown()).optional(),
       styles: z.record(z.unknown()).optional(),
       order: z.number().optional(),
+      status: z.enum(["draft", "published"]).optional(),
     })),
     async (c) => {
       const body = c.req.valid("json");
+      const data = (body.data ?? {}) as Record<string, unknown>;
+      const styles = (body.styles ?? {}) as Record<string, unknown>;
+      const isDraft = body.status === "draft";
       const [row] = await db.insert(elements).values({
         id: nanoid(),
         pageId: body.pageId,
         parentId: body.parentId ?? null,
         type: body.type,
-        data: (body.data ?? {}) as Record<string, unknown>,
-        styles: (body.styles ?? {}) as Record<string, unknown>,
+        data,
+        styles,
+        pubData: isDraft ? ({} as Record<string, unknown>) : data,
+        pubStyles: isDraft ? ({} as Record<string, unknown>) : styles,
         order: body.order ?? 0,
+        status: body.status ?? "draft",
       }).returning();
       return c.json(row, 201);
     }
@@ -56,8 +63,11 @@ export const elementsRoute = new Hono()
       type: z.string().min(1).optional(),
       data: z.record(z.unknown()).optional(),
       styles: z.record(z.unknown()).optional(),
+      pubData: z.record(z.unknown()).optional(),
+      pubStyles: z.record(z.unknown()).optional(),
       order: z.number().optional(),
       parentId: z.string().nullable().optional(),
+      status: z.enum(["draft", "published", "modified", "deleted"]).optional(),
     })),
     async (c) => {
       const body = c.req.valid("json");

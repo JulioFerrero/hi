@@ -38,13 +38,17 @@ export const elements = pgTable(
     type: varchar("type", { length: 100 }).notNull(),
     data: jsonb("data").$type<ElementData>().notNull().default({} as ElementData),
     styles: jsonb("styles").$type<ElementStyles>().notNull().default({} as ElementStyles),
+    pubData: jsonb("pub_data").$type<ElementData>().notNull().default({} as ElementData),
+    pubStyles: jsonb("pub_styles").$type<ElementStyles>().notNull().default({} as ElementStyles),
     order: integer("order").default(0).notNull(),
+    status: varchar("status", { length: 20 }).default("published").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
     pageIdx: index("elements_page_id_idx").on(table.pageId),
     parentIdx: index("elements_parent_id_idx").on(table.parentId),
+    statusIdx: index("elements_status_idx").on(table.status),
   })
 );
 
@@ -56,6 +60,22 @@ export const files = pgTable("files", {
   data: jsonb("data").$type<FileData>().notNull().default({} as FileData),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const revisions = pgTable(
+  "revisions",
+  {
+    id: varchar("id", { length: 21 }).primaryKey(),
+    pageId: varchar("page_id", { length: 21 })
+      .notNull()
+      .references(() => pages.id, { onDelete: "cascade" }),
+    label: varchar("label", { length: 255 }),
+    snapshot: jsonb("snapshot").$type<RevisionSnapshot>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    pageIdx: index("revisions_page_id_idx").on(table.pageId),
+  })
+);
 
 export const collections = pgTable(
   "collections",
@@ -107,6 +127,7 @@ export const sitesRelations = relations(sites, ({ many }) => ({
 export const pagesRelations = relations(pages, ({ one, many }) => ({
   site: one(sites, { fields: [pages.siteId], references: [sites.id] }),
   elements: many(elements),
+  revisions: many(revisions),
 }));
 
 export const elementsRelations = relations(elements, ({ one, many }) => ({
@@ -237,6 +258,18 @@ export type CollectionData = {
   label: string;
   icon: string;
   fields: CollectionField[];
+};
+
+export type RevisionSnapshot = {
+  elements: Array<{
+    id: string;
+    parentId: string | null;
+    type: string;
+    data: ElementData;
+    styles: ElementStyles;
+    order: number;
+  }>;
+  page: PageData;
 };
 
 export type DocumentData = {
