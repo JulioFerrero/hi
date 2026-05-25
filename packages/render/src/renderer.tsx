@@ -2,7 +2,6 @@ import React from "react";
 import type { RenderElement, RendererMap } from "./types";
 import { elAttrs } from "./types";
 import { classesFromStyles, inlineStylesFromTokens } from "./styles";
-import { buildTree } from "./tree";
 
 function DefaultElement({ element, className, style, children, attrs }: { element: RenderElement; className: string; style: React.CSSProperties; children?: React.ReactNode; attrs: Record<string, string> }) {
   return (
@@ -24,8 +23,7 @@ export function ElementRenderer({ element, renderer, editor }: { element: Render
   if (Component) {
     const el = <Component element={element} className={className} style={style} attrs={attrs}>{children}</Component>;
     if (isEditor) {
-      const Suspense = React.Suspense;
-      return <Suspense fallback={<div {...attrs} className={className} />}>{el}</Suspense>;
+      return <React.Suspense fallback={<div {...attrs} className={className} />}>{el}</React.Suspense>;
     }
     return el;
   }
@@ -33,11 +31,9 @@ export function ElementRenderer({ element, renderer, editor }: { element: Render
   return <DefaultElement element={element} className={className} style={style} attrs={attrs}>{children}</DefaultElement>;
 }
 
-export function RenderPage({ elements, renderer, editor }: { elements: RenderElement[]; renderer: RendererMap; editor?: boolean }): React.ReactElement {
-  const tree = buildTree(elements);
-  return <>{tree.map((el) => <ElementRenderer key={el.id} element={el} renderer={renderer} editor={editor} />)}</>;
+export function RenderPage({ content, renderer, editor }: { content: RenderElement[]; renderer: RendererMap; editor?: boolean }): React.ReactElement {
+  return <>{content.map((el) => <ElementRenderer key={el.id} element={el} renderer={renderer} editor={editor} />)}</>;
 }
 
-export { buildTree } from "./tree";
 export { classesFromStyles, inlineStylesFromTokens } from "./styles";
 export type { RenderElement, ElementProps, RendererMap } from "./types";

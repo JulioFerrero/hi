@@ -1,7 +1,7 @@
-import type { RenderElement, PageItem } from "../types";
+import type { PageElement, PageItem } from "../types";
 
 export interface HistoryEntry {
-  elements: RenderElement[];
+  content: PageElement[];
   pages: PageItem[];
   selectedElementId: string | null;
 }
@@ -27,12 +27,12 @@ export function pushHistoryEntry(
   };
 }
 
-export function computeUndo(s: HistoryOpsState & { elements: RenderElement[]; pages: PageItem[]; selectedElementId: string | null }) {
+export function computeUndo(s: HistoryOpsState & { content: PageElement[]; pages: PageItem[]; selectedElementId: string | null }) {
   if (s._historyIndex < 0) return null;
   const entry = s._history[s._historyIndex];
   if (!entry) return null;
   return {
-    elements: entry.elements,
+    content: entry.content,
     pages: entry.pages,
     selectedElementId: entry.selectedElementId,
     isDirty: true,
@@ -40,13 +40,13 @@ export function computeUndo(s: HistoryOpsState & { elements: RenderElement[]; pa
   };
 }
 
-export function computeRedo(s: HistoryOpsState & { elements: RenderElement[]; pages: PageItem[]; selectedElementId: string | null }) {
+export function computeRedo(s: HistoryOpsState & { content: PageElement[]; pages: PageItem[]; selectedElementId: string | null }) {
   const nextIndex = s._historyIndex + 1;
   if (nextIndex >= s._history.length) return null;
   const entry = s._history[nextIndex];
   if (!entry) return null;
   return {
-    elements: entry.elements,
+    content: entry.content,
     pages: entry.pages,
     selectedElementId: entry.selectedElementId,
     isDirty: true,

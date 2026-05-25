@@ -13,10 +13,14 @@ import {
   Check,
   Upload,
   History,
+  Users,
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@hi/utils";
 import { ReviewDialog } from "../review-dialog";
 import { HistoryPanel } from "../history-panel";
+import { ProfileDropdown } from "../profile-dropdown";
+import { navigate } from "../../lib/navigate";
 
 function DraftStatusBadge() {
   const hasActiveDraft = useEditorStore((s) => s.hasActiveDraft);
@@ -123,11 +127,30 @@ export function TopBar() {
           className="flex h-9 items-center justify-center gap-1.5 rounded-xl px-3 text-sm text-white/50 transition-all duration-200 hover:bg-white/10 hover:text-white/80"
           onClick={() => {
             const siteId = useEditorStore.getState().activeSiteId;
-            if (siteId) window.location.href = `/content/${siteId}`;
+            if (siteId) navigate(`/content/${siteId}`);
           }}
           title="Content"
         >
           Content
+        </button>
+        <Separator orientation="vertical" className="mx-1 h-6 bg-white/10" />
+        <button
+          type="button"
+          className="flex h-9 items-center justify-center gap-1.5 rounded-xl px-3 text-sm text-white/50 transition-all duration-200 hover:bg-white/10 hover:text-white/80"
+          onClick={() => navigate("/admin/users")}
+          title="User Management"
+        >
+          <Users className="h-4 w-4" />
+          Users
+        </button>
+        <button
+          type="button"
+          className="flex h-9 items-center justify-center gap-1.5 rounded-xl px-3 text-sm text-white/50 transition-all duration-200 hover:bg-white/10 hover:text-white/80"
+          onClick={() => navigate("/assets")}
+          title="Assets"
+        >
+          <ImageIcon className="h-4 w-4" />
+          Assets
         </button>
         <Separator orientation="vertical" className="mx-1 h-6 bg-white/10" />
         <button
@@ -148,6 +171,8 @@ export function TopBar() {
         >
           <Redo2 className="h-4.5 w-4.5" />
         </button>
+        <Separator orientation="vertical" className="mx-1.5 h-6 bg-white/10" />
+        <ProfileDropdown />
         <Separator orientation="vertical" className="mx-1.5 h-6 bg-white/10" />
         <PublishButton />
       </div>

@@ -1,8 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useEditorStore } from "../../stores";
 import { useEditorContext } from "../../lib/context";
-import { buildTree } from "@hi/render";
-import type { RenderElement, PageItem } from "../../types";
+import type { PageElement, PageItem } from "../../types";
 import { Tree, type NodeApi } from "react-arborist";
 import {
   Plus,
@@ -45,14 +44,12 @@ export function LeftPanel() {
   const pages = useEditorStore((s) => s.pages);
   const activePageId = useEditorStore((s) => s.activePageId);
   const activeSiteId = useEditorStore((s) => s.activeSiteId);
-  const elements = useEditorStore((s) => s.elements);
+  const content = useEditorStore((s) => s.content);
   const selectedElementId = useEditorStore((s) => s.selectedElementId);
   const setActivePage = useEditorStore((s) => s.setActivePage);
   const selectElement = useEditorStore((s) => s.selectElement);
   const setHoveredElement = useEditorStore((s) => s.setHoveredElement);
   const updatePageLocal = useEditorStore((s) => s.updatePageLocal);
-  const moveElement = useEditorStore((s) => s.moveElement);
-  const reorderElement = useEditorStore((s) => s.reorderElement);
   const { schema, actions } = useEditorContext();
 
   const [addElementParentId, setAddElementParentId] = useState<string | null>(null);
@@ -72,8 +69,7 @@ export function LeftPanel() {
   }, [pages, rootPage]);
 
   const elementTreeData = useMemo<ElementTreeData[]>(() => {
-    const tree = buildTree(elements);
-    function convert(els: RenderElement[]): ElementTreeData[] {
+    function convert(els: PageElement[]): ElementTreeData[] {
       return els.map((el) => {
         const typeConfig = schema.elementTypes.find((t) => t.type === el.type);
         return {
@@ -85,8 +81,8 @@ export function LeftPanel() {
         };
       });
     }
-    return convert(tree);
-  }, [elements, schema.elementTypes]);
+    return convert(content);
+  }, [content, schema.elementTypes]);
 
   const handlePageMove = useCallback(
     ({ dragIds, parentId, index }: { dragIds: string[]; parentId: string | null; index: number }) => {
@@ -116,16 +112,19 @@ export function LeftPanel() {
   const elementVisibleCount = useMemo(() => countNodes(elementTreeData), [elementTreeData]);
 
   const handleElementMove = useCallback(({ dragIds, parentId, index }: { dragIds: string[]; parentId: string | null; index: number }) => {
-    const dragId = dragIds[0]; if (!dragId) return; moveElement(dragId, parentId, index);
-  }, [moveElement]);
+    const dragId = dragIds[0]; if (!dragId) return; actions.moveNodeTo(dragId, parentId, index);
+  }, [actions]);
 
-  const handleElementSelect = useCallback((nodes: NodeApi<ElementTreeData>[]) => { if (nodes.length > 0 && nodes[0]) selectElement(nodes[0].id); }, [selectElement]);
+  const handleElementSelect = useCallback((nodes: any[]) => {
+    const id = nodes.length > 0 ? nodes[0].id : null;
+    selectElement(id);
+  }, [selectElement]);
 
-  const handleAddElementToParent = useCallback(async (type: string) => {
+  const handleAddElement = useCallback(async (type: string) => {
     if (!activePageId) return;
-    await actions.addElement(activePageId, type, addElementParentId);
+    await actions.addChild(addElementParentId, type);
     setAddElementParentId(null);
-  }, [activePageId, addElementParentId, actions]);
+  }, [addElementParentId, actions]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent<HTMLElement>, state: CtxMenuState) => {
     e.preventDefault(); e.stopPropagation();
@@ -144,13 +143,13 @@ export function LeftPanel() {
     } else {
       switch (action) {
         case "add-child": setAddElementParentId(id); break;
-        case "duplicate": actions.duplicateElement(id); break;
-        case "move-up": reorderElement(id, "up"); break;
-        case "move-down": reorderElement(id, "down"); break;
-        case "delete": actions.deleteElement(id); break;
+        case "duplicate": actions.duplicateNode(id); break;
+        case "move-up": actions.moveNodeUp(id); break;
+        case "move-down": actions.moveNodeDown(id); break;
+        case "delete": actions.deleteNode(id); break;
       }
-    }
-  }, [ctxMenu, actions, handlePageRename, reorderElement]);
+      }
+    }, [ctxMenu, actions, handlePageRename]);
 
   return (
     <div className="w-[240px] h-full flex flex-col bg-black/80 backdrop-blur-xl relative select-none">
@@ -219,7 +218,7 @@ export function LeftPanel() {
         open={addElementParentId !== null}
         onOpenChange={(o) => { if (!o) setAddElementParentId(null); }}
         elementTypes={schema.elementTypes}
-        onSelect={handleAddElementToParent}
+        onSelect={handleAddElement}
       />
       </div>
     </div>

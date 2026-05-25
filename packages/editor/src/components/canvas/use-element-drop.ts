@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import { useEditorStore } from "../../stores";
+import { findElementById, findById } from "@hi/render";
 
 export function useElementDrop(
   queryElementAtPoint: (x: number, y: number) => { el: HTMLElement } | null,
@@ -75,7 +76,8 @@ export function useElementDrop(
       if (!hit) { clearDropIndicator(); return; }
 
       const hitId = hit.el.getAttribute("data-el-id")!;
-      const hitEl = useEditorStore.getState().elements.find((el) => el.id === hitId);
+      const content = useEditorStore.getState().content;
+      const hitEl = findElementById(content, hitId);
       if (!hitEl) { clearDropIndicator(); return; }
 
       const doc = hit.el.ownerDocument;
@@ -83,18 +85,17 @@ export function useElementDrop(
       const midY = rect.top + rect.height / 2;
       const before = e.clientY < midY;
       const isContainer = containerSet.has(hitEl.type);
-      const children = useEditorStore.getState().elements.filter((el) => el.parentId === hitId);
 
-      if (isContainer && children.length === 0) {
+      if (isContainer && hitEl.children.length === 0) {
         showContainerIndicator(doc, hit.el);
         dropInfoRef.current = { parentId: hitId, index: 0 };
       } else {
         showLineIndicator(doc, hit.el, before);
-        const siblings = useEditorStore.getState().elements
-          .filter((el) => el.parentId === hitEl.parentId)
-          .sort((a, b) => a.order - b.order);
+        const hitParentInfo = findById(content, hitId);
+        const parent = hitParentInfo?.parent;
+        const siblings = parent ? parent.children : content;
         const idx = siblings.findIndex((s) => s.id === hitId);
-        dropInfoRef.current = { parentId: hitEl.parentId, index: before ? idx : idx + 1 };
+        dropInfoRef.current = { parentId: parent?.id ?? null, index: before ? idx : idx + 1 };
       }
     };
 
@@ -111,8 +112,8 @@ export function useElementDrop(
 
       if (!activePageId) return;
 
-      actions.addElement(activePageId, type, parentId).then((el: any) => {
-        useEditorStore.getState().moveElement(el.id, parentId, index);
+      actions.addChild(parentId, type, index).then((el: any) => {
+        actions.moveNodeTo(el.id, parentId, index);
       });
     };
 

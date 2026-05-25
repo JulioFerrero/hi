@@ -84,19 +84,18 @@ function getFieldChanges(
   return results;
 }
 
-function ElementTree({ elements, parentId }: { elements: RenderElement[]; parentId: string | null }) {
-  const children = elements.filter((e) => e.parentId === parentId).sort((a, b) => a.order - b.order);
-  if (children.length === 0) return null;
+function ElementTree({ elements }: { elements: RenderElement[] }) {
+  if (elements.length === 0) return null;
 
   return (
     <ul className="ml-4 border-l border-white/10 pl-3">
-      {children.map((el) => (
+      {elements.map((el) => (
         <li key={el.id} className="py-0.5">
           <span className="text-xs text-white/50">{el.type}</span>
           <span className="text-xs text-white/80 ml-2">
             {(el.data as Record<string, unknown>)?.content as string || ""}
           </span>
-          <ElementTree elements={elements} parentId={el.id} />
+          <ElementTree elements={el.children} />
         </li>
       ))}
     </ul>
@@ -264,11 +263,11 @@ export function ReviewDialog({
                 <div className="flex gap-4 flex-1 min-h-0">
                   <div className="flex-1 border border-white/10 rounded-lg p-4 overflow-auto">
                     <div className="text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Published</div>
-                    <ElementTree elements={diff.published} parentId={null} />
+                    <ElementTree elements={diff.published} />
                   </div>
                   <div className="flex-1 border border-white/10 rounded-lg p-4 overflow-auto">
                     <div className="text-xs font-medium text-white/40 mb-2 uppercase tracking-wider">Draft</div>
-                    <ElementTree elements={diff.draft} parentId={null} />
+                    <ElementTree elements={diff.draft} />
                   </div>
                 </div>
               )

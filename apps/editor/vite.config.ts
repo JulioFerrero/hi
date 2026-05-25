@@ -73,15 +73,17 @@ function apiPlugin(): Plugin {
             return;
           }
 
-          let body: string | undefined;
+          let body: string | Buffer | undefined;
           if (method !== "GET" && method !== "HEAD") {
             const chunks: Buffer[] = [];
             for await (const chunk of req) chunks.push(chunk);
-            body = Buffer.concat(chunks).toString();
+            const raw = Buffer.concat(chunks);
+            const isMultipart = req.headers["content-type"]?.includes("multipart/form-data");
+            body = isMultipart ? raw : raw.toString();
           }
 
           if (url.pathname === "/api/tailwind") {
-            const parsed = body ? JSON.parse(body) : {};
+            const parsed = body && typeof body === "string" ? JSON.parse(body) : {};
             const css = await tailwindFn(parsed.classes ?? []);
             res.writeHead(200, { "content-type": "text/css" });
             res.end(css);
@@ -95,7 +97,7 @@ function apiPlugin(): Plugin {
             if (typeof v === "string") headers[k] = v;
             else if (Array.isArray(v)) headers[k] = v.join(", ");
           }
-          if (body && !headers["content-type"]) headers["content-type"] = "application/json";
+          if (body && typeof body === "string" && !headers["content-type"]) headers["content-type"] = "application/json";
 
           const newReq = new Request(newUrl, {
             method,

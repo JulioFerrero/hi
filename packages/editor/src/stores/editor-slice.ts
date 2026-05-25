@@ -1,8 +1,8 @@
 import type { StateCreator } from "zustand";
-import type { RenderElement, PageItem, Viewport } from "../types";
+import type { RenderElement, PageItem, Viewport, PageElement } from "../types";
 import type { HistoryEntry } from "./history";
 import { computeUndo, computeRedo, canUndo, canRedo } from "./history";
-import { computeReorder, computeMove } from "./element-operations";
+import { findElementById, insertChild, removeById, updateById, moveNode, duplicateNode, cloneTree, findById } from "@hi/render";
 
 export type SaveStatus = "idle" | "saving" | "saved";
 
@@ -14,8 +14,7 @@ export interface EditorState {
   viewport: Viewport;
   pages: PageItem[];
   dirtyPageIds: Set<string>;
-  dirtyElementIds: Set<string>;
-  elements: RenderElement[];
+  content: PageElement[];
   isDirty: boolean;
   hasActiveDraft: boolean;
   isLoading: boolean;
@@ -30,20 +29,21 @@ export interface EditorActions {
   setViewport: (viewport: Viewport) => void;
   setPages: (pages: PageItem[]) => void;
   updatePageLocal: (id: string, updates: { data?: Record<string, unknown>; slug?: string }) => void;
-  setElements: (elements: RenderElement[]) => void;
+  setContent: (content: PageElement[]) => void;
   selectElement: (id: string | null) => void;
   setHoveredElement: (id: string | null) => void;
-  updateElement: (id: string, updates: Partial<RenderElement>) => void;
-  addElement: (element: RenderElement) => void;
-  removeElement: (id: string) => void;
-  insertElements: (elements: RenderElement[]) => void;
-  reorderElement: (id: string, direction: "up" | "down") => void;
-  moveElement: (id: string, newParentId: string | null, index: number) => void;
+  updateNode: (id: string, patch: { data?: Record<string, unknown>; styles?: Record<string, string>; type?: string }) => void;
+  addChild: (parentId: string | null, element: PageElement, index?: number) => void;
+  removeNode: (id: string) => void;
+  duplicateNode: (id: string) => void;
+  moveNodeUp: (id: string) => void;
+  moveNodeDown: (id: string) => void;
+  moveNodeTo: (id: string, newParentId: string | null, index: number) => void;
+  pushHistory: () => void;
   setDirty: (dirty: boolean) => void;
   setLoading: (loading: boolean) => void;
   setSaveStatus: (status: SaveStatus) => void;
   setHasActiveDraft: (hasDraft: boolean) => void;
-  markElementStale: (id: string) => void;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
@@ -60,8 +60,7 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
   viewport: "desktop" as Viewport,
   pages: [],
   dirtyPageIds: new Set<string>(),
-  dirtyElementIds: new Set<string>(),
-  elements: [],
+  content: [],
   isDirty: false,
   hasActiveDraft: false,
   isLoading: false,
@@ -87,51 +86,89 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
       dirtyPageIds: new Set([...s.dirtyPageIds, id]),
       isDirty: true,
     })),
-  setElements: (elements) => set({ elements, dirtyElementIds: new Set(), isDirty: false }),
+  setContent: (content) => set({ content, isDirty: false, hasActiveDraft: false }),
   selectElement: (id) => set({ selectedElementId: id }),
   setHoveredElement: (id) => set({ hoveredElementId: id }),
-  updateElement: (id, updates) =>
-    set((s) => ({
-      elements: s.elements.map((e) => (e.id === id ? { ...e, ...updates } : e)),
-      dirtyElementIds: new Set([...s.dirtyElementIds, id]),
-      isDirty: true,
-      hasActiveDraft: true,
-    })),
-  addElement: (element) =>
-    set((s) => ({ elements: [...s.elements, element], dirtyElementIds: new Set([...s.dirtyElementIds, element.id]), isDirty: true })),
-  removeElement: (id) =>
-    set((s) => ({
-      elements: s.elements.filter((e) => e.id !== id && e.parentId !== id),
-      selectedElementId: s.selectedElementId === id ? null : s.selectedElementId,
-      dirtyElementIds: new Set([...s.dirtyElementIds].filter((d) => d !== id)),
-      isDirty: true,
-      hasActiveDraft: true,
-    })),
-  insertElements: (newElements) =>
-    set((s) => ({
-      elements: [...s.elements, ...newElements],
-      dirtyElementIds: new Set([...s.dirtyElementIds, ...newElements.map((e) => e.id)]),
-      isDirty: true,
-    })),
-  reorderElement: (id, direction) =>
+  pushHistory: () => set((s) => {
+    const entry: HistoryEntry = { content: cloneTree(s.content) };
+    const history = s._history.slice(0, s._historyIndex + 1);
+    history.push(entry);
+    if (history.length > 50) history.shift();
+    return { _history: history, _historyIndex: history.length - 1 };
+  }),
+  updateNode: (id, patch) =>
     set((s) => {
-      const result = computeReorder(s, id, direction);
-      return result ?? {};
+      const clone = cloneTree(s.content);
+      updateById(clone, id, patch);
+      return { content: clone, isDirty: true, hasActiveDraft: true };
     }),
-  moveElement: (id, newParentId, index) =>
+  addChild: (parentId, element, index) =>
     set((s) => {
-      const result = computeMove(s, id, newParentId, index);
-      return result ?? {};
+      const clone = cloneTree(s.content);
+      if (parentId) {
+        insertChild(clone, parentId, element, index);
+      } else {
+        if (index !== undefined && index >= 0 && index <= clone.length) {
+          clone.splice(index, 0, element);
+        } else {
+          clone.push(element);
+        }
+      }
+      return { content: clone, isDirty: true, hasActiveDraft: true };
+    }),
+  removeNode: (id) =>
+    set((s) => {
+      const clone = cloneTree(s.content);
+      removeById(clone, id);
+      return {
+        content: clone,
+        selectedElementId: s.selectedElementId === id ? null : s.selectedElementId,
+        isDirty: true,
+        hasActiveDraft: true,
+      };
+    }),
+  duplicateNode: (id) =>
+    set((s) => {
+      const clone = cloneTree(s.content);
+      const result = findById(clone, id);
+      if (result) {
+        const dup = duplicateNode(clone, id, crypto.randomUUID());
+        if (dup) return { content: clone, selectedElementId: dup.id, isDirty: true, hasActiveDraft: true };
+      }
+      return { content: clone, isDirty: true, hasActiveDraft: true };
+    }),
+  moveNodeUp: (id) =>
+    set((s) => {
+      const clone = cloneTree(s.content);
+      const result = findById(clone, id);
+      if (result && result.index > 0) {
+        const parentChildren = result.parent ? result.parent.children : clone;
+        const el = parentChildren.splice(result.index, 1)[0];
+        parentChildren.splice(result.index - 1, 0, el);
+      }
+      return { content: clone, isDirty: true, hasActiveDraft: true };
+    }),
+  moveNodeDown: (id) =>
+    set((s) => {
+      const clone = cloneTree(s.content);
+      const result = findById(clone, id);
+      const parentChildren = result.parent ? result.parent.children : clone;
+      if (result && result.index < parentChildren.length - 1) {
+        const el = parentChildren.splice(result.index, 1)[0];
+        parentChildren.splice(result.index + 1, 0, el);
+      }
+      return { content: clone, isDirty: true, hasActiveDraft: true };
+    }),
+  moveNodeTo: (id, newParentId, index) =>
+    set((s) => {
+      const clone = cloneTree(s.content);
+      moveNode(clone, id, newParentId, index);
+      return { content: clone, isDirty: true, hasActiveDraft: true };
     }),
   setDirty: (dirty) => set((s) => ({ isDirty: dirty, saveStatus: dirty ? "idle" : s.saveStatus })),
   setLoading: (loading) => set({ isLoading: loading }),
   setSaveStatus: (status) => set({ saveStatus: status }),
   setHasActiveDraft: (hasDraft) => set({ hasActiveDraft: hasDraft }),
-  markElementStale: (id) =>
-    set((s) => ({
-      dirtyElementIds: new Set([...s.dirtyElementIds, id]),
-      isDirty: true,
-    })),
   undo: () => set((s) => computeUndo(s) ?? {}),
   redo: () => set((s) => computeRedo(s) ?? {}),
   canUndo: () => canUndo(get()),

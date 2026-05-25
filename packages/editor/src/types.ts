@@ -1,6 +1,8 @@
 import type { ComponentType } from "react";
 import type { CollectionConfig, StructureItem } from "@hi/cms";
-import type { RenderElement as BaseRenderElement } from "@hi/render";
+import type { RenderElement as BaseRenderElement, PageElement } from "@hi/render";
+
+export type { PageElement };
 
 export interface FieldConfig {
   name: string;
@@ -49,20 +51,18 @@ export interface EditorApi {
 }
 
 export interface RendererAdapter {
-  PageRenderer: ComponentType<{ elements: RenderElement[]; editor?: boolean }>;
+  PageRenderer: ComponentType<{ content: RenderElement[]; editor?: boolean }>;
 }
 
 export interface PageItem {
   id: string;
   slug: string;
   data: { title: string; path: string; status: string; parentId?: string; order?: number; [key: string]: unknown };
+  content?: RenderElement[];
+  pubContent?: Record<string, unknown>;
 }
 
-export interface RenderElement extends BaseRenderElement {
-  pubData?: Record<string, unknown>;
-  pubStyles?: Record<string, unknown>;
-  status?: string;
-}
+export interface RenderElement extends BaseRenderElement {}
 
 export type Viewport = "desktop" | "tablet" | "mobile";
 
@@ -79,4 +79,3 @@ export interface EditorConfig {
   renderer?: Record<string, ComponentType<Record<string, unknown>>>;
   content?: CollectionConfig[];
 }
-

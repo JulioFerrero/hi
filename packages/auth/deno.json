@@ -1,0 +1,22 @@
+{
+  "name": "@hi/auth",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/auth.ts",
+    "./client": "./src/auth-client.ts",
+    "./middleware": "./src/middleware.ts"
+  },
+  "imports": {
+    "better-auth": "npm:better-auth@^1.6.0",
+    "@better-auth/drizzle-adapter": "npm:@better-auth/drizzle-adapter@^1.6.0",
+    "drizzle-orm": "npm:drizzle-orm@^0.43.0",
+    "react": "npm:react@^19.1.0",
+    "@hi/database": "../database/src/index.ts",
+    "@hi/utils": "../utils/src/index.ts",
+    "lucide-react": "npm:lucide-react@^0.509.0"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  }
+}

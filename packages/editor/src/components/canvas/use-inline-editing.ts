@@ -2,6 +2,7 @@ import { useRef, useCallback } from "react";
 import type { EditorActions } from "../../lib/actions";
 import type { CursorMode } from "./canvas-cursor";
 import { useEditorStore } from "../../stores";
+import { findElementById } from "@hi/render";
 
 export function useInlineEditing(
   actions: EditorActions,
@@ -16,7 +17,7 @@ export function useInlineEditing(
     target.contentEditable = "false";
     target.style.cursor = "";
     const elId = target.getAttribute("data-el-id")!;
-    actions.updateElementData(elId, { content: target.innerText });
+    actions.updateNodeData(elId, { content: target.innerText });
     editingRef.current = null;
     setCursorMode("default");
   }, [actions, setCursorMode]);
@@ -43,7 +44,8 @@ export function useInlineEditing(
     const hit = queryElAtPoint(e.clientX, e.clientY);
     if (!hit) return;
     const elId = hit.el.getAttribute("data-el-id")!;
-    const el = useEditorStore.getState().elements.find((e) => e.id === elId);
+    const content = useEditorStore.getState().content;
+    const el = findElementById(content, elId);
     if (!el || !editableTypes.has(el.type)) return;
     useEditorStore.getState().selectElement(elId);
     startInlineEdit(hit.el);

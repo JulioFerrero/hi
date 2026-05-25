@@ -1,17 +1,18 @@
 import { useEditorStore } from "../stores";
 import { useEditorContext } from "./context";
+import { findElementById } from "@hi/render";
 
 export function useActiveContext() {
   const activePageId = useEditorStore((state) => state.activePageId);
   const activeSiteId = useEditorStore((state) => state.activeSiteId);
-  const elements = useEditorStore((state) => state.elements);
+  const content = useEditorStore((state) => state.content);
   const pages = useEditorStore((state) => state.pages);
   const selectedElementId = useEditorStore((state) => state.selectedElementId);
   const selectElement = useEditorStore((state) => state.selectElement);
   const { schema, actions } = useEditorContext();
 
   const selected = selectedElementId
-    ? elements.find((element) => element.id === selectedElementId) ?? null
+    ? findElementById(content, selectedElementId)
     : null;
 
   const activePage = activePageId
@@ -21,7 +22,7 @@ export function useActiveContext() {
   return {
     activePageId,
     activeSiteId,
-    elements,
+    content,
     pages,
     selectedElementId,
     selected,

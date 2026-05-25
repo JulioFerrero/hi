@@ -21,7 +21,7 @@ export function useKeyboardShortcuts(
         const target = e.target as HTMLElement;
         if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.contentEditable === "true") return;
         e.preventDefault();
-        actions.deleteElement(sel);
+        actions.deleteNode(sel);
       }
     };
     globalThis.addEventListener("keydown", handler);

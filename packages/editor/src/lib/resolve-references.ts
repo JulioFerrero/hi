@@ -1,6 +1,6 @@
 import { useRef, useEffect, useMemo, useState } from "react";
 import { useCmsStore } from "../stores/cms-store";
-import type { RenderElement, EditorSchema, EditorApi } from "../types";
+import type { EditorSchema, EditorApi, PageElement } from "../types";
 import { createCmsActions } from "./cms-actions";
 
 function collectReferenceFields(schema: EditorSchema): Record<string, { field: string; collection: string; multiple: boolean }[]> {
@@ -17,80 +17,89 @@ function collectReferenceFields(schema: EditorSchema): Record<string, { field: s
 }
 
 function collectAllReferenceIds(
-  elements: RenderElement[],
+  content: PageElement[],
   refMap: Record<string, { field: string; collection: string; multiple: boolean }[]>,
 ): Set<string> {
   const ids = new Set<string>();
-  for (const el of elements) {
-    const refs = refMap[el.type];
-    if (!refs) continue;
-    for (const ref of refs) {
-      const value = el.data[ref.field];
-      if (!value) continue;
-      if (Array.isArray(value)) {
-        for (const v of value) {
-          if (typeof v === "string") ids.add(v);
+  function walk(nodes: PageElement[]) {
+    for (const el of nodes) {
+      const refs = refMap[el.type];
+      if (refs) {
+        for (const ref of refs) {
+          const value = el.data[ref.field];
+          if (!value) continue;
+          if (Array.isArray(value)) {
+            for (const v of value) {
+              if (typeof v === "string") ids.add(v);
+            }
+          } else if (typeof value === "string") {
+            ids.add(value);
+          }
         }
-      } else if (typeof value === "string") {
-        ids.add(value);
       }
+      if (el.children.length > 0) walk(el.children);
     }
   }
+  walk(content);
   return ids;
 }
 
 function resolveElements(
-  elements: RenderElement[],
+  content: PageElement[],
   refMap: Record<string, { field: string; collection: string; multiple: boolean }[]>,
   cache: Map<string, unknown>,
-): RenderElement[] {
-  return elements.map((el) => {
+): PageElement[] {
+  return content.map((el) => {
     const refs = refMap[el.type];
-    if (!refs) return el;
-
     let changed = false;
     const resolvedData = { ...el.data };
 
-    for (const ref of refs) {
-      const value = el.data[ref.field];
-      if (!value) continue;
+    if (refs) {
+      for (const ref of refs) {
+        const value = el.data[ref.field];
+        if (!value) continue;
 
-      if (ref.multiple && Array.isArray(value)) {
-        resolvedData[ref.field] = value
-          .map((id) => cache.get(String(id)) ?? null)
-          .filter(Boolean);
-        changed = true;
-      } else if (typeof value === "string") {
-        const resolved = cache.get(value);
-        if (resolved) {
-          resolvedData[ref.field] = resolved;
+        if (ref.multiple && Array.isArray(value)) {
+          resolvedData[ref.field] = value
+            .map((id) => cache.get(String(id)) ?? null)
+            .filter(Boolean);
           changed = true;
+        } else if (typeof value === "string") {
+          const resolved = cache.get(value);
+          if (resolved) {
+            resolvedData[ref.field] = resolved;
+            changed = true;
+          }
         }
       }
     }
 
-    return changed ? { ...el, data: resolvedData } : el;
+    return {
+      ...el,
+      data: changed ? resolvedData : el.data,
+      children: resolveElements(el.children, refMap, cache),
+    };
   });
 }
 
 export function useResolvedElements(
-  elements: RenderElement[],
+  content: PageElement[],
   schema: EditorSchema,
   api: EditorApi,
   _siteId: string,
-): RenderElement[] {
+): PageElement[] {
   const refMap = useMemo(() => collectReferenceFields(schema), [schema]);
   const cacheRef = useRef<Map<string, unknown>>(new Map());
-  const [resolved, setResolved] = useState<RenderElement[]>(() =>
-    resolveElements(elements, refMap, cacheRef.current),
+  const [resolved, setResolved] = useState<PageElement[]>(() =>
+    resolveElements(content, refMap, cacheRef.current),
   );
 
   useEffect(() => {
-    const allIds = collectAllReferenceIds(elements, refMap);
+    const allIds = collectAllReferenceIds(content, refMap);
     const missingIds = [...allIds].filter((id) => !cacheRef.current.has(id));
 
     if (missingIds.length === 0) {
-      setResolved(resolveElements(elements, refMap, cacheRef.current));
+      setResolved(resolveElements(content, refMap, cacheRef.current));
       return;
     }
 
@@ -112,20 +121,16 @@ export function useResolvedElements(
           for (const doc of docs) {
             cacheRef.current.set(doc.id, doc);
           }
-        } catch {
-          // Ignore fetch errors — elements will render without resolved refs
-        }
+        } catch { /* ignore */ }
       }
 
       if (cancelled) return;
-
-      setResolved(resolveElements(elements, refMap, cacheRef.current));
+      setResolved(resolveElements(content, refMap, cacheRef.current));
     }
 
     fetchMissing();
-
     return () => { cancelled = true; };
-  }, [elements, api, refMap]);
+  }, [content, api, refMap]);
 
   useEffect(() => {
     const unsub = useCmsStore.subscribe(() => {
@@ -133,10 +138,10 @@ export function useResolvedElements(
       for (const [id, doc] of currentCache) {
         cacheRef.current.set(id, doc);
       }
-      setResolved(resolveElements(elements, refMap, cacheRef.current));
+      setResolved(resolveElements(content, refMap, cacheRef.current));
     });
     return unsub;
-  }, [elements, refMap]);
+  }, [content, refMap]);
 
   return resolved;
 }

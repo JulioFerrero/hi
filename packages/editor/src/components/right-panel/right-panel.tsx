@@ -6,17 +6,18 @@ import { IconBtn, CompactInput, Label, Btn, BtnGroup, SectionLabel } from "./pri
 import { ContentField } from "./content-field";
 import { StyleGroup } from "./style-group";
 import { derivePath, slugify } from "../../lib/paths";
+import { findElementById } from "@hi/render";
 
 export function RightPanel() {
   const selectedElementId = useEditorStore((s) => s.selectedElementId);
-  const elements = useEditorStore((s) => s.elements);
+  const content = useEditorStore((s) => s.content);
   const activePageId = useEditorStore((s) => s.activePageId);
   const pages = useEditorStore((s) => s.pages);
   const hasActiveDraft = useEditorStore((s) => s.hasActiveDraft);
   const updatePageLocal = useEditorStore((s) => s.updatePageLocal);
-  const { schema, actions } = useEditorContext();
+  const { schema, actions, api, siteId } = useEditorContext();
 
-  const selected = elements.find((e) => e.id === selectedElementId);
+  const selected = selectedElementId ? findElementById(content, selectedElementId) : null;
   const activePage = pages.find((p) => p.id === activePageId);
 
   if (!selected) {
@@ -55,7 +56,7 @@ export function RightPanel() {
                     onClick={() => {
                       actions.discardDraft().then(() => {
                         const pageId = useEditorStore.getState().activePageId;
-                        if (pageId) actions.loadElements(pageId);
+                        if (pageId) actions.loadContent(pageId);
                       });
                     }}
                   >
@@ -74,18 +75,18 @@ export function RightPanel() {
   }
 
   const typeConfig = schema.elementTypes.find((t) => t.type === selected.type);
-  const updateData = (key: string, value: unknown) => actions.updateElementData(selected.id, { ...selected.data, [key]: value });
-  const updateStyle = (key: string, value: string) => actions.updateElementStyles(selected.id, { ...selected.styles, [key]: value || undefined });
+  const updateData = (key: string, value: unknown) => actions.updateNodeData(selected.id, { ...(selected.data as Record<string, unknown> ?? {}), [key]: value });
+  const updateStyle = (key: string, value: string) => actions.updateNodeStyles(selected.id, { ...(selected.styles as Record<string, string> ?? {}), [key]: value || undefined });
 
   return (
     <div className="w-[240px] h-full flex flex-col bg-black/80 backdrop-blur-xl relative">
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.06]">
         <span className="text-[11px] font-semibold capitalize text-white/80">{typeConfig?.label ?? selected.type}</span>
         <div className="flex items-center gap-0.5">
-          <IconBtn onClick={() => actions.duplicateElement(selected.id)} title="Duplicate" hoverColor="editor-ring">
+          <IconBtn onClick={() => actions.duplicateNode(selected.id)} title="Duplicate" hoverColor="editor-ring">
             <Copy className="h-3 w-3" />
           </IconBtn>
-          <IconBtn onClick={() => actions.deleteElement(selected.id)} title="Delete" hoverColor="destructive">
+          <IconBtn onClick={() => actions.deleteNode(selected.id)} title="Delete" hoverColor="destructive">
             <Trash2 className="h-3 w-3" />
           </IconBtn>
         </div>
@@ -97,7 +98,7 @@ export function RightPanel() {
             <SectionLabel>Content</SectionLabel>
             <div className="px-3 pb-3 space-y-2">
               {typeConfig.fields.map((f) => (
-                <ContentField key={f.name} field={f} data={selected.data} updateData={updateData} />
+                <ContentField key={f.name} field={f} data={selected.data} updateData={updateData} api={api} siteId={siteId} />
               ))}
             </div>
           </div>

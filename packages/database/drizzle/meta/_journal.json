@@ -8,6 +8,20 @@
       "when": 1778439624026,
       "tag": "0000_lucky_screwball",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779726588752,
+      "tag": "0001_nappy_dark_beast",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779747874255,
+      "tag": "0002_tricky_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

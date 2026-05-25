@@ -8,19 +8,16 @@ export function createSaveActions(api: EditorApi) {
 
   async function persistDirty() {
     const state = store.getState();
-    for (const id of state.dirtyElementIds) {
-      const el = state.elements.find((e) => e.id === id);
-      if (!el) continue;
-      try {
-        await api.fetch(`/elements/${el.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            data: el.data, styles: el.styles, order: el.order, parentId: el.parentId,
-            status: el.status === "published" ? "modified" : el.status,
-          }),
-        });
-      } catch { /* element may not exist yet */ }
-    }
+    if (!state.activePageId) return;
+
+    const pageId = state.activePageId;
+    try {
+      await api.fetch(`/pages/${pageId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ content: state.content }),
+      });
+    } catch { /* ignore */ }
+
     for (const pageId of state.dirtyPageIds) {
       const page = state.pages.find((p) => p.id === pageId);
       if (page) {
@@ -31,7 +28,7 @@ export function createSaveActions(api: EditorApi) {
       }
     }
     store.getState().setDirty(false);
-    store.setState({ dirtyPageIds: new Set(), dirtyElementIds: new Set() });
+    store.setState({ dirtyPageIds: new Set() });
   }
 
   async function withSave(fn: () => Promise<void>) {
@@ -69,13 +66,7 @@ export function createSaveActions(api: EditorApi) {
       try {
         if (autoSaveTimer) { clearTimeout(autoSaveTimer); autoSaveTimer = null; }
         await persistDirty();
-        const deletedIds = [...state.dirtyElementIds].filter((id) =>
-          !state.elements.some((el) => el.id === id),
-        );
-        await api.fetch(`/pages/${state.activePageId}/publish`, {
-          method: "POST",
-          body: JSON.stringify({ deletedElementIds: deletedIds }),
-        });
+        await api.fetch(`/pages/${state.activePageId}/publish`, { method: "POST" });
         store.getState().setHasActiveDraft(false);
         store.getState().setSaveStatus("saved");
       } catch {
@@ -88,10 +79,6 @@ export function createSaveActions(api: EditorApi) {
       if (!state.activePageId) return;
       await api.fetch(`/pages/${state.activePageId}/discard-draft`, { method: "POST" });
       store.getState().setHasActiveDraft(false);
-    },
-
-    getDiff(pageId: string) {
-      return api.fetch(`/pages/${pageId}/diff`);
     },
 
     getRevisions(pageId: string) {

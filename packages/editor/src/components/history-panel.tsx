@@ -48,7 +48,7 @@ export function HistoryPanel({
     if (!activePageId) return;
     setRestoringId(revId);
     await actions.restoreRevision(activePageId, revId);
-    await actions.loadElements(activePageId);
+    await actions.loadContent(activePageId);
     setRestoringId(null);
     onOpenChange(false);
   };

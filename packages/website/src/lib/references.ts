@@ -15,13 +15,20 @@ function buildReferenceMap(): Record<string, string> {
   return refs;
 }
 
+function walkElements(elements: RenderElement[], fn: (el: RenderElement) => void) {
+  for (const el of elements) {
+    fn(el);
+    if (el.children?.length) walkElements(el.children, fn);
+  }
+}
+
 export async function resolvePageReferences(elements: RenderElement[]): Promise<RenderElement[]> {
   const refs = buildReferenceMap();
   const refNames = Object.keys(refs);
   if (refNames.length === 0) return elements;
 
   const allIds = new Set<string>();
-  for (const el of elements) {
+  walkElements(elements, (el) => {
     for (const name of refNames) {
       const val = el.data[name];
       if (!val) continue;
@@ -33,7 +40,7 @@ export async function resolvePageReferences(elements: RenderElement[]): Promise<
         allIds.add(val);
       }
     }
-  }
+  });
 
   if (allIds.size === 0) return elements;
 
@@ -44,6 +51,14 @@ export async function resolvePageReferences(elements: RenderElement[]): Promise<
     docMap.set(doc.id, doc as unknown as Record<string, unknown>);
   }
 
+  return resolveElements(elements, refNames, docMap);
+}
+
+function resolveElements(
+  elements: RenderElement[],
+  refNames: string[],
+  docMap: Map<string, Record<string, unknown>>,
+): RenderElement[] {
   return elements.map((el) => {
     const resolvedData = { ...el.data };
     let changed = false;
@@ -63,6 +78,10 @@ export async function resolvePageReferences(elements: RenderElement[]): Promise<
         }
       }
     }
-    return changed ? { ...el, data: resolvedData } : el;
+    return {
+      ...el,
+      data: changed ? resolvedData : el.data,
+      children: resolveElements(el.children ?? [], refNames, docMap),
+    };
   });
 }

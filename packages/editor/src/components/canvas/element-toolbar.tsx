@@ -4,6 +4,7 @@ import { useEditorContext } from "../../lib/context";
 import { getIcon } from "../../icons";
 import { ChevronUp } from "lucide-react";
 import { ToolbarButton } from "./toolbar-button";
+import { findElementById } from "@hi/render";
 
 interface ElementButton {
   type: string;
@@ -28,7 +29,7 @@ export function ElementToolbar({
 }) {
   const { schema, actions } = useEditorContext();
   const selectedElementId = useEditorStore((s) => s.selectedElementId);
-  const elements = useEditorStore((s) => s.elements);
+  const content = useEditorStore((s) => s.content);
   const containerRef = useRef<HTMLDivElement>(null);
   const [perRow, setPerRow] = useState(Infinity);
   const [expanded, setExpanded] = useState(false);
@@ -36,7 +37,7 @@ export function ElementToolbar({
   if (!pageId) return null;
 
   const selected = selectedElementId
-    ? elements.find((e) => e.id === selectedElementId)
+    ? findElementById(content, selectedElementId)
     : null;
   const parentId =
     selected && containerSet.has(selected.type) ? selected.id : null;
@@ -48,7 +49,7 @@ export function ElementToolbar({
   }
 
   const handleClick = (type: string) =>
-    actions.addElement(pageId, type, parentId);
+    actions.addChild(parentId, type);
   const onToolbarDragStart = onDragStart;
 
   useEffect(() => {

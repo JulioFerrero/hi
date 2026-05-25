@@ -4,9 +4,66 @@ import {
   timestamp,
   integer,
   varchar,
+  boolean,
+  text,
   index,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  role: text("role"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  userIdIdx: index("session_user_id_idx").on(table.userId),
+}));
+
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  idToken: text("id_token"),
+  password: text("password"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  userIdIdx: index("account_user_id_idx").on(table.userId),
+}));
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 
 export const sites = pgTable("sites", {
   id: varchar("id", { length: 21 }).primaryKey(),
@@ -23,34 +80,11 @@ export const pages = pgTable("pages", {
     .references(() => sites.id, { onDelete: "cascade" }),
   slug: varchar("slug", { length: 255 }).notNull(),
   data: jsonb("data").$type<PageData>().notNull().default({} as PageData),
+  content: jsonb("content").$type<PageContent[]>().notNull().default([]),
+  pubContent: jsonb("pub_content").$type<PageContent[]>().notNull().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
-export const elements = pgTable(
-  "elements",
-  {
-    id: varchar("id", { length: 21 }).primaryKey(),
-    pageId: varchar("page_id", { length: 21 })
-      .notNull()
-      .references(() => pages.id, { onDelete: "cascade" }),
-    parentId: varchar("parent_id", { length: 21 }),
-    type: varchar("type", { length: 100 }).notNull(),
-    data: jsonb("data").$type<ElementData>().notNull().default({} as ElementData),
-    styles: jsonb("styles").$type<ElementStyles>().notNull().default({} as ElementStyles),
-    pubData: jsonb("pub_data").$type<ElementData>().notNull().default({} as ElementData),
-    pubStyles: jsonb("pub_styles").$type<ElementStyles>().notNull().default({} as ElementStyles),
-    order: integer("order").default(0).notNull(),
-    status: varchar("status", { length: 20 }).default("published").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    pageIdx: index("elements_page_id_idx").on(table.pageId),
-    parentIdx: index("elements_parent_id_idx").on(table.parentId),
-    statusIdx: index("elements_status_idx").on(table.status),
-  })
-);
 
 export const files = pgTable("files", {
   id: varchar("id", { length: 21 }).primaryKey(),
@@ -126,18 +160,7 @@ export const sitesRelations = relations(sites, ({ many }) => ({
 
 export const pagesRelations = relations(pages, ({ one, many }) => ({
   site: one(sites, { fields: [pages.siteId], references: [sites.id] }),
-  elements: many(elements),
   revisions: many(revisions),
-}));
-
-export const elementsRelations = relations(elements, ({ one, many }) => ({
-  page: one(pages, { fields: [elements.pageId], references: [pages.id] }),
-  parent: one(elements, {
-    fields: [elements.parentId],
-    references: [elements.id],
-    relationName: "elementTree",
-  }),
-  children: many(elements, { relationName: "elementTree" }),
 }));
 
 export const filesRelations = relations(files, ({ one }) => ({
@@ -155,6 +178,19 @@ export const documentsRelations = relations(documents, ({ one }) => ({
     references: [collections.id],
   }),
   site: one(sites, { fields: [documents.siteId], references: [sites.id] }),
+}));
+
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, { fields: [session.userId], references: [user.id] }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
 
 export type SiteData = {
@@ -181,54 +217,12 @@ export type PageData = {
   parentId?: string;
 };
 
-export type ElementData = {
-  content?: string;
-  src?: string;
-  alt?: string;
-  href?: string;
-  target?: string;
-  tagName?: string;
-  columns?: number;
-  gap?: string;
-  maxWidth?: string;
-  variant?: string;
-  [key: string]: unknown;
-};
-
-export type ElementStyles = {
-  padding?: string;
-  margin?: string;
-  width?: string;
-  height?: string;
-  minHeight?: string;
-  maxWidth?: string;
-  fontSize?: string;
-  fontWeight?: string;
-  fontFamily?: string;
-  lineHeight?: string;
-  letterSpacing?: string;
-  color?: string;
-  backgroundColor?: string;
-  textAlign?: string;
-  verticalAlign?: string;
-  display?: string;
-  flexDirection?: string;
-  justifyContent?: string;
-  alignItems?: string;
-  gap?: string;
-  gridTemplateColumns?: string;
-  borderRadius?: string;
-  borderWidth?: string;
-  borderColor?: string;
-  borderStyle?: string;
-  opacity?: string;
-  overflow?: string;
-  position?: string;
-  backgroundImage?: string;
-  backgroundSize?: string;
-  backgroundPosition?: string;
-  objectFit?: string;
-  [key: string]: unknown;
+export type PageContent = {
+  id: string;
+  type: string;
+  data: Record<string, unknown>;
+  styles: Record<string, string>;
+  children: PageContent[];
 };
 
 export type FileData = {
@@ -261,14 +255,7 @@ export type CollectionData = {
 };
 
 export type RevisionSnapshot = {
-  elements: Array<{
-    id: string;
-    parentId: string | null;
-    type: string;
-    data: ElementData;
-    styles: ElementStyles;
-    order: number;
-  }>;
+  content: PageContent[];
   page: PageData;
 };
 

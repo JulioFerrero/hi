@@ -19,10 +19,12 @@ import type { CmsCollectionItem, CmsDocumentItem, CmsFieldConfig } from "../../s
 import { useCmsContext } from "../../lib/context";
 import { createCmsActions } from "../../lib/cms-actions";
 import { ReferencePicker } from "./reference-picker";
+import { MediaLibrary } from "../media-library";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@hi/ui/dialog";
 import { Button } from "@hi/ui/button";
 import { Input } from "@hi/ui/input";
 import { cn } from "@hi/utils";
+import { Image as ImageIcon } from "lucide-react";
 
 const textareaClass = "flex w-full rounded-xl border border-white/10 bg-transparent px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-editor-ring/30 focus:border-editor-ring/40 transition-all duration-200 resize-y min-h-[80px]";
 const labelClass = "block text-[11px] font-semibold uppercase tracking-wider text-white/40 mb-1.5";
@@ -123,6 +125,7 @@ function FormField({ field, value, onChange, siteId }: {
 }) {
   const label = field.label ?? field.name;
   const str = typeof value === "string" ? value : "";
+  const cmsCtx = useCmsContext();
 
   if (field.type === "reference") {
     const ids: string[] = Array.isArray(value) ? (value as string[]).map(String) : (typeof value === "string" && value.length > 0 ? [value] : []);
@@ -183,9 +186,13 @@ function FormField({ field, value, onChange, siteId }: {
               className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded-lg bg-black/60 text-white/60 hover:text-white hover:bg-black/80 opacity-0 group-hover:opacity-100 transition-all">&times;</button>
           </div>
         ) : (
-          <Input type="text" placeholder="Image URL..."
-            value={str} onChange={(e) => onChange(e.target.value)} />
+          <div className="space-y-1">
+            <Input type="text" placeholder="Image URL..."
+              value={str} onChange={(e) => onChange(e.target.value)} />
+            <MediaPickerButton onChange={onChange} api={cmsCtx.api} siteId={siteId} />
+          </div>
         )}
+        {str && <MediaPickerButton onChange={onChange} api={cmsCtx.api} siteId={siteId} />}
       </div>
     );
   }
@@ -396,6 +403,31 @@ const SortableItem = memo(function SortableItem({ id, item: _item, index, previe
       </button>
     </div>
   );
-}, (prev, next) => {
+  }, (prev, next) => {
   return prev.preview === next.preview && prev.isEditing === next.isEditing && prev.id === next.id;
 });
+
+function MediaPickerButton({ onChange, api, siteId }: {
+  onChange: (v: unknown) => void; api: { fetch: (path: string, init?: RequestInit) => Promise<unknown> }; siteId: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-1 text-[10px] text-white/30 hover:text-editor-ring transition-colors"
+      >
+        <ImageIcon className="h-3 w-3" />
+        Media Library
+      </button>
+      <MediaLibrary
+        open={open}
+        onClose={() => setOpen(false)}
+        onSelect={(url) => { onChange(url); setOpen(false); }}
+        siteId={siteId}
+        api={{ fetch: api.fetch } as import("../../types").EditorApi}
+      />
+    </>
+  );
+}

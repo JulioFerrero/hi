@@ -8,6 +8,7 @@ import {
   querySelectedOutline,
 } from "./canvas-helpers";
 import { useInlineEditing } from "./use-inline-editing";
+import { findElementById } from "@hi/render";
 
 export function useBlockerEvents(
   blockerRef: React.RefObject<HTMLDivElement | null>,
@@ -45,9 +46,9 @@ export function useBlockerEvents(
         if (editingRef.current && editingRef.current !== hit.el) finishInlineEdit();
         const clickedId = hit.el.getAttribute("data-el-id")!;
         if (clickedId === useEditorStore.getState().selectedElementId) {
-          const elems = useEditorStore.getState().elements;
-          const child = elems.find((c) => c.parentId === clickedId);
-          if (child) selectElement(child.id);
+          const content = useEditorStore.getState().content;
+          const clicked = findElementById(content, clickedId);
+          if (clicked && clicked.children.length > 0) selectElement(clicked.children[0].id);
         } else { selectElement(clickedId); }
         return;
       }
@@ -112,7 +113,7 @@ export function useBlockerEvents(
     const el = querySelectedOutline(wrapperRef, useEditorStore.getState().selectedElementId);
     if (el) { applyOutline(el, "selected"); lastSelectedRef.current = el; return; }
     if (!useEditorStore.getState().selectedElementId) lastSelectedRef.current = null;
-  }, [useEditorStore.getState().selectedElementId, useEditorStore.getState().elements]);
+  }, [useEditorStore.getState().selectedElementId, useEditorStore.getState().content]);
 
   return { queryElementAtPoint, editingRef };
 }

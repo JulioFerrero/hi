@@ -1,14 +1,20 @@
+import { useState } from "react";
 import type { FieldConfig } from "../../types";
 import { Label, Btn, BtnGroup, CompactInput, inputBase } from "./primitives";
 import { ReferencePicker } from "../cms/reference-picker";
+import { MediaLibrary } from "../media-library";
 import { useCmsStore } from "../../stores/cms-store";
 import { useEditorStore } from "../../stores";
 import { cn } from "@hi/utils";
+import { Image as ImageIcon } from "lucide-react";
+import type { EditorApi } from "../../types";
 
-export function ContentField({ field, data, updateData }: {
-  field: FieldConfig; data: Record<string, unknown>; updateData: (key: string, value: unknown) => void;
+export function ContentField({ field, data, updateData, api, siteId }: {
+  field: FieldConfig; data: Record<string, unknown>; updateData: (key: string, value: unknown) => void; api?: EditorApi; siteId?: string;
 }) {
   const val = data[field.name];
+  const [mediaOpen, setMediaOpen] = useState(false);
+  const showMediaPicker = field.type === "url" && api && siteId;
 
   if (field.type === "reference") {
     const ids: string[] = Array.isArray(val) ? val.map(String) : val ? [String(val)] : [];
@@ -60,7 +66,28 @@ export function ContentField({ field, data, updateData }: {
   }
 
   return (
-    <CompactInput label={field.label} value={typeof val === "string" ? val : ""}
-      onChange={(v) => updateData(field.name, v)} type={field.type === "number" ? "number" : "text"} />
+    <div>
+      <CompactInput label={field.label} value={typeof val === "string" ? val : ""}
+        onChange={(v) => updateData(field.name, v)} type={field.type === "number" ? "number" : "text"} />
+      {showMediaPicker && (
+        <div className="mt-1">
+          <button
+            type="button"
+            onClick={() => setMediaOpen(true)}
+            className="flex items-center gap-1 text-[10px] text-white/30 hover:text-editor-ring transition-colors"
+          >
+            <ImageIcon className="h-3 w-3" />
+            Media Library
+          </button>
+          <MediaLibrary
+            open={mediaOpen}
+            onClose={() => setMediaOpen(false)}
+            onSelect={(url) => { updateData(field.name, url); setMediaOpen(false); }}
+            siteId={siteId!}
+            api={api!}
+          />
+        </div>
+      )}
+    </div>
   );
 }

@@ -25,14 +25,14 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
   const [cursorMode, setCursorMode] = useState<CursorMode>("default");
   const [cursorVisible, setCursorVisible] = useState(true);
 
-  const elements = useEditorStore((s) => s.elements);
+  const content = useEditorStore((s) => s.content);
   const selectedElementId = useEditorStore((s) => s.selectedElementId);
   const selectElement = useEditorStore((s) => s.selectElement);
   const activePageId = useEditorStore((s) => s.activePageId);
   const activeSiteId = useEditorStore((s) => s.activeSiteId);
   const { schema, actions, renderer, api } = useEditorContext();
 
-  const resolvedElements = useResolvedElements(elements, schema, api, activeSiteId ?? "");
+  const resolvedContent = useResolvedElements(content, schema, api, activeSiteId ?? "");
 
   const editableTypes = new Set(schema.elementTypes.filter((t) => t.fields.some((f) => f.name === "content")).map((t) => t.type));
   const containerSet = new Set(schema.elementTypes.filter((t) => t.isContainer).map((t) => t.type));
@@ -56,7 +56,7 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
           <div className="relative">
             <div className="flex items-start gap-12 p-8">
               {VIEWPORTS.map((vp) => (
-                <ViewportFrame key={vp} viewport={vp} elements={resolvedElements} renderer={renderer} />
+                <ViewportFrame key={vp} viewport={vp} content={resolvedContent} renderer={renderer} />
               ))}
             </div>
             <div

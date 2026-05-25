@@ -2,58 +2,43 @@ import { page } from "fresh";
 import { define } from "../utils.ts";
 import { PageRenderer, type RenderElement } from "@hi/website";
 import { db } from "@hi/database";
-import { pages, elements } from "@hi/database";
-import { eq, and, or, asc } from "drizzle-orm";
-import { resolvePageReferences } from "../../../packages/website/src/lib/references.ts";
+import { pages } from "@hi/database";
+import { eq } from "drizzle-orm";
 
-type PageData = { error: string | null; elements: RenderElement[] | null };
+type PageData = { error: string | null; content: RenderElement[] | null };
 
-const fallbackElements: RenderElement[] = [
-  { id: "s1", parentId: null, type: "section", order: 0, data: {}, styles: { width: "full", padding: "16", paddingX: "6" } },
-  { id: "h1", parentId: "s1", type: "heading", order: 0, data: { content: "@hi/web", tagName: "h1" }, styles: { fontSize: "4xl", fontWeight: "bold" } },
-  { id: "t1", parentId: "s1", type: "text", order: 1, data: { content: "Configure SITE_ID and seed the database to render pages." }, styles: { fontSize: "lg", color: "#6b7280" } },
+const fallbackContent: RenderElement[] = [
+  { id: "s1", type: "section", data: {}, styles: { width: "full", padding: "16", paddingX: "6" }, children: [
+    { id: "h1", type: "heading", data: { content: "@hi/web", tagName: "h1" }, styles: { fontSize: "4xl", fontWeight: "bold" }, children: [] },
+    { id: "t1", type: "text", data: { content: "Configure SITE_ID and seed the database to render pages." }, styles: { fontSize: "lg", color: "#6b7280" }, children: [] },
+  ]},
 ];
 
 export const handler = define.handlers({
   async GET(ctx) {
     const siteId = Deno.env.get("SITE_ID");
     if (!siteId) {
-      return page({ error: "SITE_ID not configured", elements: null });
+      return page({ error: "SITE_ID not configured", content: null });
     }
 
     const slug = ctx.params.slug ?? "";
     const path = "/" + slug;
     const allPages = await db.select().from(pages).where(eq(pages.siteId, siteId));
-    const found = allPages.find((p) => (p.data as Record<string, unknown>)?.path === (path === "" ? "/" : path));
+    const found = allPages.find((p) => (p.data as Record<string, unknown>)?.path === (path ? "/" : ""));
 
     if (!found) {
-      return page({ error: "Page not found: " + (path || "/"), elements: null });
+      return page({ error: "Page not found: " + (path || "/"), content: null });
     }
 
-    const pageElements = await db.select().from(elements)
-      .where(and(
-        eq(elements.pageId, found.id),
-        or(eq(elements.status, "published"), eq(elements.status, "modified")),
-      ))
-      .orderBy(asc(elements.order));
+    const status = (found.data as Record<string, unknown>)?.status as string | undefined;
+    const content = (status === "published" ? found.pubContent : found.content) as RenderElement[] | undefined;
 
-    const renderElements: RenderElement[] = pageElements.map((e) => ({
-      id: e.id,
-      parentId: e.parentId,
-      type: e.type,
-      data: (e.pubData ?? e.data ?? {}) as Record<string, unknown>,
-      styles: (e.pubStyles ?? e.styles ?? {}) as Record<string, unknown>,
-      order: e.order,
-    }));
-
-    const resolved = await resolvePageReferences(renderElements);
-
-    return page({ error: null, elements: resolved });
+    return page({ error: null, content: content ?? [] });
   },
 });
 
 export default define.page<typeof handler>(({ data }: { data: PageData }) => {
-  if (!data.elements) {
+  if (!data.content) {
     if (data.error) {
       return (
         <div class="flex min-h-screen items-center justify-center">
@@ -61,8 +46,8 @@ export default define.page<typeof handler>(({ data }: { data: PageData }) => {
         </div>
       );
     }
-    return <PageRenderer elements={fallbackElements} />;
+    return <PageRenderer content={fallbackContent} />;
   }
 
-  return <PageRenderer elements={data.elements} />;
+  return <PageRenderer content={data.content} />;
 });

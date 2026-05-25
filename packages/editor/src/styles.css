@@ -95,6 +95,17 @@
   }
 }
 
+@keyframes animate-out {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
 .animate-in {
-  animation: animate-in 100ms ease-out both;
+  animation: animate-in 120ms ease-out both;
+}
+
+.animate-out {
+  animation: animate-out 100ms ease-in both;
 }

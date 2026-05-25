@@ -1,4 +1,4 @@
-import { defineElement, textField, textareaField, urlField } from "@hi/editor";
+import { defineElement, textField, textareaField, urlField, selectField } from "@hi/editor";
 
 export const ctaSection = defineElement({
   type: "cta-section",
@@ -12,12 +12,14 @@ export const ctaSection = defineElement({
     description: "Start creating beautiful pages with Hi Editor today. Free and open source.",
     ctaText: "Get Started",
     ctaHref: "#",
+    theme: "dark",
   },
   fields: [
     textField({ name: "headline", label: "Headline" }),
     textareaField({ name: "description", label: "Description", rows: 2 }),
     textField({ name: "ctaText", label: "CTA Text" }),
     urlField({ name: "ctaHref", label: "CTA URL" }),
+    selectField({ name: "theme", label: "Theme", options: ["dark", "light"] }),
   ],
   styleGroups: ["spacing"],
 });

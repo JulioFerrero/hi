@@ -22,7 +22,7 @@ function ensureInit(siteId: string, actions: ReturnType<typeof import("../lib/ac
 
     if (pageId) {
       store.setActivePage(pageId);
-      await actions.loadElements(pageId);
+      await actions.loadContent(pageId);
     }
   })();
 
@@ -46,7 +46,7 @@ function EditorInner({ siteId }: { siteId: string }) {
     if (!activePageId) return;
     if (activePageId === prevPageRef.current) return;
     prevPageRef.current = activePageId;
-    actions.loadElements(activePageId);
+    actions.loadContent(activePageId);
   }, [activePageId, actions]);
 
   useEffect(() => {

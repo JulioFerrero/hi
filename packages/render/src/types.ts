@@ -1,11 +1,9 @@
 export interface RenderElement {
   id: string;
-  parentId: string | null;
   type: string;
   data: Record<string, unknown>;
   styles: Record<string, unknown>;
-  order: number;
-  children?: RenderElement[];
+  children: RenderElement[];
 }
 
 export interface ElementProps {

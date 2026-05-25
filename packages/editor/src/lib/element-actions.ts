@@ -1,5 +1,6 @@
 import { useEditorStore } from "../stores";
-import type { EditorApi, EditorSchema, RenderElement } from "../types";
+import type { EditorApi, EditorSchema, PageElement } from "../types";
+import { createElement } from "@hi/render";
 
 export function createElementActions(api: EditorApi, schema: EditorSchema) {
   const store = useEditorStore;
@@ -9,106 +10,63 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
   }
 
   return {
-    async loadElements(pageId: string) {
+    async loadContent(pageId: string) {
       store.getState().setLoading(true);
-      const elements = (await api.fetch(`/elements?pageId=${pageId}`)) as RenderElement[];
-      const hasPendingChanges = elements.some((el) => el.status === "modified" || el.status === "draft");
-      store.getState().setElements(elements);
-      store.getState().setHasActiveDraft(hasPendingChanges);
+      const page = await api.fetch(`/pages/${pageId}`) as { content?: PageElement[]; data?: Record<string, unknown> };
+      const content = (page.content ?? []) as PageElement[];
+      const isPublished = (page.data as Record<string, unknown> | undefined)?.status !== "published";
+      store.getState().setContent(content);
+      store.getState().setHasActiveDraft(false);
       store.getState().setLoading(false);
-      return elements;
+      return content;
     },
 
-    async addElement(pageId: string, type: string, parentId?: string | null) {
-      const state = store.getState();
-      const siblings = parentId
-        ? state.elements.filter((e) => e.parentId === parentId)
-        : state.elements.filter((e) => !e.parentId);
-      const maxOrder = siblings.reduce((max, e) => Math.max(max, e.order), -1);
+    addChild(parentId: string | null, type: string, index?: number) {
       const config = getTypeConfig(type);
-
-      const element = (await api.fetch("/elements", {
-        method: "POST",
-        body: JSON.stringify({
-          pageId,
-          type,
-          parentId: parentId ?? null,
-          data: config?.defaultData ?? {},
-          styles: config?.defaultStyles ?? {},
-          order: maxOrder + 1,
-          status: "draft",
-        }),
-      })) as RenderElement;
-
-      store.setState((s) => ({
-        elements: [...s.elements, element],
-        dirtyElementIds: new Set([...s.dirtyElementIds, element.id]),
-        isDirty: true,
-        hasActiveDraft: true,
-        selectedElementId: element.id,
-      }));
+      const element = createElement(
+        type,
+        config?.defaultData ?? {},
+        config?.defaultStyles ?? {},
+      );
+      store.getState().pushHistory();
+      store.getState().addChild(parentId, element, index);
+      store.getState().selectElement(element.id);
       return element;
     },
 
-    updateElementData(id: string, data: Record<string, unknown>) {
-      store.getState().updateElement(id, { data: data as Record<string, unknown> });
+    updateNodeData(id: string, data: Record<string, unknown>) {
+      store.getState().pushHistory();
+      store.getState().updateNode(id, { data });
     },
 
-    updateElementStyles(id: string, styles: Record<string, unknown>) {
-      store.getState().updateElement(id, { styles: styles as Record<string, unknown> });
+    updateNodeStyles(id: string, styles: Record<string, string>) {
+      store.getState().pushHistory();
+      store.getState().updateNode(id, { styles });
     },
 
-    async deleteElement(id: string) {
-      const state = store.getState();
-      const el = state.elements.find((e) => e.id === id);
-      if (!el) return;
-
-      if (el.status === "draft") {
-        try {
-          await api.fetch(`/elements/${id}`, { method: "DELETE" });
-        } catch { /* may not exist yet */ }
-      }
-
-      store.getState().removeElement(id);
+    deleteNode(id: string) {
+      store.getState().pushHistory();
+      store.getState().removeNode(id);
     },
 
-    async duplicateElement(id: string) {
-      const state = store.getState();
-      const el = state.elements.find((e) => e.id === id);
-      if (!el) return;
-      const siblings = el.parentId
-        ? state.elements.filter((e) => e.parentId === el.parentId)
-        : state.elements.filter((e) => !e.parentId);
-      const maxOrder = siblings.reduce((max, e) => Math.max(max, e.order), -1);
-      const pageId = state.activePageId!;
+    duplicateNode(id: string) {
+      store.getState().pushHistory();
+      store.getState().duplicateNode(id);
+    },
 
-      const allClones: RenderElement[] = [];
+    moveNodeUp(id: string) {
+      store.getState().pushHistory();
+      store.getState().moveNodeUp(id);
+    },
 
-      async function cloneTree(elementId: string, newParentId: string | null, isRoot: boolean): Promise<void> {
-        const src = state.elements.find((e) => e.id === elementId);
-        if (!src) return;
-        const created = (await api.fetch("/elements", {
-          method: "POST",
-          body: JSON.stringify({
-            pageId, type: src.type, parentId: newParentId,
-            data: { ...src.data }, styles: { ...src.styles },
-            order: isRoot ? maxOrder + 1 : src.order, status: "draft",
-          }),
-        })) as RenderElement;
-        allClones.push(created);
-        for (const child of state.elements) {
-          if (child.parentId === src.id) await cloneTree(child.id, created.id, false);
-        }
-      }
+    moveNodeDown(id: string) {
+      store.getState().pushHistory();
+      store.getState().moveNodeDown(id);
+    },
 
-      await cloneTree(id, el.parentId ?? null, true);
-      store.setState((s) => ({
-        elements: [...s.elements, ...allClones],
-        dirtyElementIds: new Set([...s.dirtyElementIds, ...allClones.map((e) => e.id)]),
-        isDirty: true, hasActiveDraft: true,
-        selectedElementId: allClones[0]?.id ?? s.selectedElementId,
-      }));
-      return allClones;
+    moveNodeTo(id: string, newParentId: string | null, index: number) {
+      store.getState().pushHistory();
+      store.getState().moveNodeTo(id, newParentId, index);
     },
   };
 }

@@ -24,12 +24,12 @@ function viewportOverrideCSS(h: number) {
 
 export function ViewportFrame({
   viewport,
-  elements,
+  content,
   renderer,
 }: {
   viewport: Viewport;
-  elements: any[];
-  renderer: { PageRenderer: React.ComponentType<{ elements: any[]; editor?: boolean }> };
+  content: any[];
+  renderer: { PageRenderer: React.ComponentType<{ content: any[]; editor?: boolean }> };
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeH, setIframeH] = useState(800);
@@ -83,14 +83,14 @@ export function ViewportFrame({
 
     if (!rootRef.current) rootRef.current = createRoot(mountEl);
 
-    const tree = elements.length === 0
+    const tree = content.length === 0
       ? <div style={{ display: "flex", height: "600px", alignItems: "center", justifyContent: "center", color: "#999" }}>
           <div style={{ textAlign: "center" }}>
             <p style={{ fontSize: "18px", fontWeight: 500 }}>Empty page</p>
             <p style={{ marginTop: "4px", fontSize: "14px" }}>Add elements using the toolbar below</p>
           </div>
         </div>
-      : <renderer.PageRenderer elements={elements} editor />;
+      : <renderer.PageRenderer content={content} editor />;
 
     rootRef.current.render(tree);
 
@@ -132,7 +132,7 @@ export function ViewportFrame({
     }
 
     return () => ro.disconnect();
-  }, [elements, renderer, pageViewportH]);
+  }, [content, renderer, pageViewportH]);
 
   return (
     <div className="flex flex-col items-center gap-3 flex-shrink-0">
