@@ -3,6 +3,53 @@ import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "node:path";
 import { denoWorkspacePlugin } from "./vite-plugin-deno.ts";
 import { Buffer } from "node:buffer";
+import { WebSocketServer } from "ws";
+
+type ClientInfo = { userId: string; name: string; color: string; siteId: string; pageId: string };
+const wsRooms = new Map<WebSocket, ClientInfo>();
+
+function wsRoomKey(siteId: string, pageId: string) { return `${siteId}:${pageId}`; }
+
+function handleWsJoin(wss: InstanceType<typeof WebSocketServer>, ws: WebSocket, msg: Record<string, unknown>) {
+  const { userId, name, color, siteId, pageId } = msg as Record<string, string>;
+  if (!userId || !siteId || !pageId) return;
+  const old = wsRooms.get(ws);
+  if (old && old.userId === userId && wsRoomKey(old.siteId, old.pageId) === wsRoomKey(siteId, pageId)) return;
+  wsRooms.delete(ws);
+  wsRooms.set(ws, { userId, name, color, siteId, pageId });
+  const key = wsRoomKey(siteId, pageId);
+  for (const [other, info] of wsRooms) {
+    if (other !== ws && wsRoomKey(info.siteId, info.pageId) === key) {
+      other.send(JSON.stringify({ type: "join", userId, name, color }));
+      ws.send(JSON.stringify({ type: "join", userId: info.userId, name: info.name, color: info.color }));
+    }
+  }
+}
+
+function handleWsCursor(wss: InstanceType<typeof WebSocketServer>, ws: WebSocket, msg: Record<string, unknown>) {
+  const info = wsRooms.get(ws);
+  if (!info) return;
+  const key = wsRoomKey(info.siteId, info.pageId);
+  const data = JSON.stringify({ type: "cursor", userId: info.userId, x: msg.x, y: msg.y });
+  for (const [other, otherInfo] of wsRooms) {
+    if (other !== ws && other.readyState === 1 && wsRoomKey(otherInfo.siteId, otherInfo.pageId) === key) {
+      other.send(data);
+    }
+  }
+}
+
+function handleWsLeave(wss: InstanceType<typeof WebSocketServer>, ws: WebSocket) {
+  const info = wsRooms.get(ws);
+  if (!info) return;
+  wsRooms.delete(ws);
+  const key = wsRoomKey(info.siteId, info.pageId);
+  const data = JSON.stringify({ type: "leave", userId: info.userId });
+  for (const [other, otherInfo] of wsRooms) {
+    if (other !== ws && other.readyState === 1 && wsRoomKey(otherInfo.siteId, otherInfo.pageId) === key) {
+      other.send(data);
+    }
+  }
+}
 
 const root = resolve(import.meta.dirname, "../..");
 
@@ -30,6 +77,25 @@ function apiPlugin(): Plugin {
       fontCSSResult.then((r) => {
         resolvedFontCSS = r.css;
         resolvedFontDirs = r.fontDirs;
+      });
+
+      let wss: InstanceType<typeof WebSocketServer>;
+
+      server.httpServer?.on("upgrade", (req, socket, head) => {
+        if (req.url !== "/ws") return;
+        if (!wss) {
+          wss = new WebSocketServer({ noServer: true });
+          wss.on("connection", (ws) => {
+            ws.on("message", (raw: Buffer) => {
+              let msg: Record<string, unknown>;
+              try { msg = JSON.parse(raw.toString()); } catch { return; }
+              if (msg.type === "join") handleWsJoin(wss, ws, msg);
+              if (msg.type === "cursor") handleWsCursor(wss, ws, msg);
+            });
+            ws.on("close", () => handleWsLeave(wss, ws));
+          });
+        }
+        wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
       });
 
       server.middlewares.use(async (req, res, next) => {

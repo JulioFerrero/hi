@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { db, user, account, session } from "@hi/database";
 import { eq } from "drizzle-orm";
 import { auth } from "@hi/auth";
+import { hashPassword } from "@hi/auth/crypto";
 import {
   authMiddleware,
   requireAuth,
@@ -77,25 +78,28 @@ adminUsersRoute.post("/", requireAdmin, async (c) => {
     return c.json({ error: "A user with this email already exists" }, 409);
   }
 
-  const result = await auth.api.signUpEmail({
-    body: {
-      name,
-      email,
-      password,
-    },
-    headers: c.req.raw.headers,
+  const id = crypto.randomUUID();
+  const hashedPassword = await hashPassword(password);
+
+  await db.insert(user).values({
+    id,
+    name,
+    email,
+    emailVerified: false,
+    role: role ?? "user",
   });
 
-  if (!result.user) {
-    return c.json({ error: "Failed to create user" }, 500);
-  }
+  const [acc] = await db.insert(account).values({
+    id: crypto.randomUUID(),
+    userId: id,
+    accountId: email,
+    providerId: "credential",
+    password: hashedPassword,
+  }).returning();
 
-  if (role) {
-    await db.update(user).set({ role }).where(eq(user.id, result.user.id));
-    (result.user as Record<string, unknown>).role = role;
-  }
+  const [created] = await db.select().from(user).where(eq(user.id, id)).limit(1);
 
-  return c.json(result.user, 201);
+  return c.json(created, 201);
 });
 
 adminUsersRoute.patch("/:id", requireAdmin, async (c) => {

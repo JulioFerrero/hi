@@ -25,8 +25,9 @@ interface FileEntry {
   createdAt: string;
 }
 
-export function AssetsPage({ onBack }: { onBack: () => void }) {
-  const siteId = useEditorStore((s) => s.activeSiteId);
+export function AssetsPage({ siteId: siteIdProp, onBack: _onBack }: { siteId: string; onBack: () => void }) {
+  const storeSiteId = useEditorStore((s) => s.activeSiteId);
+  const siteId = siteIdProp ?? storeSiteId;
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -175,9 +176,9 @@ export function AssetsPage({ onBack }: { onBack: () => void }) {
     <div className="flex flex-col h-screen bg-[#08080A]">
       <header className="shrink-0 flex h-14 items-center justify-between px-4 border-b border-white/[0.06] bg-[#08080A]/80 backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
+          <a href={`/${siteId}`} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back
-          </button>
+          </a>
           <span className="h-4 w-px bg-white/[0.08]" />
           <h1 className="text-sm font-medium tracking-wide text-white/60">Assets</h1>
           <span className="text-xs text-white/20">{files.length} files</span>

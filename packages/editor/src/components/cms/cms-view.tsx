@@ -43,7 +43,7 @@ function setUrlParams(collection: string | null, filter: Record<string, string> 
   globalThis.history.replaceState({}, "", url.toString());
 }
 
-export function CmsView({ siteId, onBack }: CmsViewProps) {
+export function CmsView({ siteId, onBack: _onBack }: CmsViewProps) {
   const { api, schema } = useCmsContext();
   const actions = useMemo(() => createCmsActions(api), [api]);
   const initRef = useRef(false);
@@ -158,11 +158,10 @@ export function CmsView({ siteId, onBack }: CmsViewProps) {
       <div className="flex h-screen flex-col items-center justify-center bg-background gap-4">
         <p className="text-sm text-destructive">Failed to load content</p>
         <p className="text-[11px] text-white/40">{error}</p>
-        <button type="button" onClick={onBack} className="text-xs text-editor-ring hover:text-white/80 transition-colors">
+        <a href={`/${siteId}`} className="text-xs text-editor-ring hover:text-white/80 transition-colors">
           &larr; Back to Editor
-        </button>
-      </div>
-    );
+        </a>
+      </div>    );
   }
 
   if (!loaded) {
@@ -193,10 +192,10 @@ export function CmsView({ siteId, onBack }: CmsViewProps) {
   return (
     <div className="flex h-screen flex-col bg-background">
       <div className="flex items-center gap-3 h-14 px-4 bg-black/80 backdrop-blur-xl border-b border-white/[0.06]">
-        <button type="button" onClick={onBack}
+        <a href={`/${siteId}`}
           className="flex h-9 items-center justify-center rounded-xl px-3 text-sm text-white/50 transition-all duration-200 hover:bg-white/10 hover:text-white/80">
           &larr; Back to Editor
-        </button>
+        </a>
         <span className="text-sm font-semibold text-white/80">Content</span>
         {breadcrumb && (
           <>

@@ -11,7 +11,7 @@ import { navigate } from "../lib/navigate";
 
 const api = createApiFetch();
 
-export function AccountPage({ onBack }: { onBack: () => void }) {
+export function AccountPage({ onBack: _onBack }: { onBack: () => void }) {
   const { data: session, refetch } = useSession();
   const user = session?.user;
 
@@ -112,9 +112,9 @@ export function AccountPage({ onBack }: { onBack: () => void }) {
   return (
     <div className="flex flex-col h-screen bg-[#08080A]">
       <header className="shrink-0 flex h-14 items-center px-4 border-b border-white/[0.06] bg-[#08080A]/80 backdrop-blur-xl">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
+        <a href="/" className="flex items-center gap-1.5 text-sm text-white/30 hover:text-white/60 transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back
-        </button>
+        </a>
         <span className="ml-3 h-4 w-px bg-white/[0.08]" />
         <h1 className="ml-3 text-sm font-medium tracking-wide text-white/60">Edit Profile</h1>
       </header>

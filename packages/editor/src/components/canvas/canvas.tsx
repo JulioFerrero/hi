@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useEditorStore } from "../../stores";
 import { useEditorContext } from "../../lib/context";
 import { useSession } from "@hi/auth/client";
@@ -10,6 +10,8 @@ import { useBlockerEvents } from "./use-blocker-events";
 import { useElementDrop } from "./use-element-drop";
 import { CanvasToolbar } from "./canvas-toolbar";
 import { CanvasCursor, type CursorMode } from "./canvas-cursor";
+import { RemoteCursors } from "./remote-cursors";
+import { useCursorSync, useRemoteCursors } from "./use-cursor-sync";
 import { ViewportFrame } from "./viewport-frame";
 import { useResolvedElements } from "../../lib/resolve-references";
 import type { Viewport } from "../../types";
@@ -35,6 +37,10 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
   const { data: session } = useSession();
   const userName = session?.user?.name ?? "";
   const userColor = (session?.user as Record<string, unknown> | undefined)?.cursorColor as string ?? "#7B61FF";
+  const userId = session?.user?.id ?? "";
+
+  const { subscribe, getSnap, sendCursor, rejoin } = useCursorSync(userId, userName, userColor);
+  const remoteCursors = useRemoteCursors(subscribe, getSnap, userId);
 
   const resolvedContent = useResolvedElements(content, schema, api, activeSiteId ?? "");
 
@@ -46,6 +52,40 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
   const { dragLabel, handleDragStart } = useElementDrop(queryElementAtPoint, isNativeDrag, containerSet, activePageId, actions);
 
   useKeyboardShortcuts(actions, editingRef);
+
+  useEffect(() => {
+    if (activePageId) rejoin(activePageId);
+  }, [activePageId, rejoin]);
+
+  const sendThrottleRef = useRef(0);
+  const lastMouseRef = useRef({ clientX: 0, clientY: 0 });
+  const sendCanvasCursor = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const t = transformRef.current;
+    const rect = container.getBoundingClientRect();
+    const canvasX = (lastMouseRef.current.clientX - rect.left - t.x) / t.scale;
+    const canvasY = (lastMouseRef.current.clientY - rect.top - t.y) / t.scale;
+    const now = Date.now();
+    if (now - sendThrottleRef.current > 33) {
+      sendThrottleRef.current = now;
+      sendCursor(canvasX, canvasY);
+    }
+  }, [sendCursor, containerRef, transformRef]);
+
+  const handleContainerMove = useCallback((e: MouseEvent) => {
+    lastMouseRef.current = { clientX: e.clientX, clientY: e.clientY };
+    sendCanvasCursor();
+  }, [sendCanvasCursor]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const onWheel = () => { requestAnimationFrame(() => sendCanvasCursor()); };
+    container.addEventListener("mousemove", handleContainerMove);
+    container.addEventListener("wheel", onWheel);
+    return () => { container.removeEventListener("mousemove", handleContainerMove); container.removeEventListener("wheel", onWheel); };
+  }, [handleContainerMove, sendCanvasCursor]);
 
   const handleElementDragStart = (type: string, e: React.MouseEvent<HTMLElement>) => {
     if (e.button !== 0) return;
@@ -71,6 +111,7 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
           </div>
         </div>
         <CanvasCursor containerRef={containerRef} mode={cursorMode} name={userName} color={userColor} visible={cursorVisible} dragLabel={dragLabel} />
+        <RemoteCursors cursors={remoteCursors} containerRef={containerRef} transformRef={transformRef} />
         <div ref={toolbarRef} className="absolute bottom-0 z-20 pointer-events-auto transition-all duration-200 ease-in-out" style={{ cursor: "default", left: leftPanelOpen ? 240 : 0, right: rightPanelOpen ? 240 : 0 }} onMouseEnter={() => setCursorVisible(false)} onMouseLeave={() => setCursorVisible(true)}>
           <CanvasToolbar
             pageId={activePageId}

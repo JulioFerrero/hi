@@ -26,7 +26,8 @@
     "@dnd-kit/utilities": "npm:@dnd-kit/utilities@^3.2.0",
     "@hi/auth": "../auth/src/auth.ts",
     "@hi/auth/client": "../auth/src/auth-client.ts",
-    "@hi/auth/middleware": "../auth/src/middleware.ts"
+    "@hi/auth/middleware": "../auth/src/middleware.ts",
+    "@hi/auth/crypto": "../auth/src/crypto.ts"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

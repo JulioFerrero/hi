@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { db, sites, pages } from "@hi/database";
+import { db, sites, pages, siteMembers } from "@hi/database";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getById, updateById, deleteById } from "./helpers";
 import { createElement } from "@hi/render";
 import type { PageElement } from "@hi/render";
+import type { AuthVariables } from "@hi/auth/middleware";
 
 function el(type: string, data: Record<string, unknown> = {}, styles: Record<string, string> = {}, children: PageElement[] = []): PageElement {
   return createElement(type, data, styles, children);
@@ -169,10 +170,23 @@ function generateTemplateContent(template: string): PageElement[] {
   return [];
 }
 
-export const sitesRoute = new Hono()
+export const sitesRoute = new Hono<{ Variables: AuthVariables }>()
   .get("/", async (c) => {
-    const all = await db.select().from(sites);
-    return c.json(all);
+    const sessionUser = c.get("user");
+    if (!sessionUser) return c.json([]);
+
+    if ((sessionUser as Record<string, unknown>).role === "admin") {
+      const all = await db.select().from(sites);
+      return c.json(all);
+    }
+
+    const rows = await db
+      .select({ sites: sites })
+      .from(siteMembers)
+      .innerJoin(sites, eq(siteMembers.siteId, sites.id))
+      .where(eq(siteMembers.userId, sessionUser.id));
+
+    return c.json(rows.map((r) => r.sites));
   })
   .get("/:id", async (c) => {
     const row = await getById(sites, c.req.param("id"));
@@ -212,6 +226,15 @@ export const sitesRoute = new Hono()
           content: content as any,
           pubContent: content as any,
         } as any);
+      }
+
+      const sessionUser = c.get("user");
+      if (sessionUser?.id) {
+        await db.insert(siteMembers).values({
+          id: nanoid(),
+          siteId,
+          userId: sessionUser.id,
+        });
       }
 
       return c.json(row, 201);

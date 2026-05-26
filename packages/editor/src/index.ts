@@ -5,6 +5,7 @@ export { AuthGate } from "./components/auth-gate";
 export { UsersPage } from "./components/users-page";
 export { AccountPage } from "./components/account-page";
 export { AssetsPage } from "./components/assets-page";
+export { SiteSettingsPage } from "./components/site-settings-page";
 export { createApiFetch } from "./lib/api";
 export { useEditorStore } from "./stores";
 export { EditorProvider, useEditorContext, CmsProvider, useCmsContext } from "./lib/context";

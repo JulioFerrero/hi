@@ -135,7 +135,7 @@ export function TopBar() {
             className="flex h-9 w-9 items-center justify-center rounded-xl text-white/50 transition-all duration-200 hover:bg-white/10 hover:text-white/80"
             onClick={() => {
               const siteId = useEditorStore.getState().activeSiteId;
-              if (siteId) navigate(`/content/${siteId}`);
+              if (siteId) navigate(`/${siteId}/content`);
             }}
           >
             <FileText className="h-4 w-4" />
@@ -146,7 +146,10 @@ export function TopBar() {
           <button
             type="button"
             className="flex h-9 w-9 items-center justify-center rounded-xl text-white/50 transition-all duration-200 hover:bg-white/10 hover:text-white/80"
-            onClick={() => navigate("/assets")}
+            onClick={() => {
+              const siteId = useEditorStore.getState().activeSiteId;
+              if (siteId) navigate(`/${siteId}/assets`);
+            }}
           >
             <ImageIcon className="h-4 w-4" />
           </button>

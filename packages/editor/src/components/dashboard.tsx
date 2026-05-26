@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@hi/ui/button";
 import { Input } from "@hi/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription } from "@hi/ui/card";
-import { Plus, Globe, Users, Feather, Square, Layout, PenLine, Palette, Check, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Globe, Users, Feather, Square, Layout, PenLine, Palette, Check, Trash2, Image as ImageIcon, Settings } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@hi/ui/dialog";
 import { ProfileDropdown } from "./profile-dropdown";
 import { cn } from "@hi/utils";
@@ -79,14 +79,6 @@ export function Dashboard({ api, onSelectSite }: DashboardProps) {
             >
               <Users className="h-4 w-4" />
               Users
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/assets")}
-              className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-            >
-              <ImageIcon className="h-4 w-4" />
-              Assets
             </button>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger render={<Button />}>
@@ -186,6 +178,13 @@ export function Dashboard({ api, onSelectSite }: DashboardProps) {
                     </div>
                   </CardHeader>
                 </Card>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); navigate(`/${site.id}/settings`); }}
+                className="absolute top-3 right-12 h-8 w-8 flex items-center justify-center rounded-lg bg-black/40 text-white/30 hover:text-white/60 hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all"
+              >
+                <Settings className="h-4 w-4" />
               </button>
               <button
                 type="button"

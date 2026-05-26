@@ -2,6 +2,87 @@ import { app as apiApp } from "./api/index";
 import { join } from "node:path";
 import { readFile, stat } from "node:fs/promises";
 
+type ClientInfo = { userId: string; name: string; color: string; siteId: string; pageId: string };
+
+const rooms = new Map<string, Map<WebSocket, ClientInfo>>();
+
+function getRoom(key: string) {
+  let room = rooms.get(key);
+  if (!room) { room = new Map(); rooms.set(key, room); }
+  return room;
+}
+
+function roomKey(siteId: string, pageId: string) {
+  return `${siteId}:${pageId}`;
+}
+
+function broadcast(key: string, from: WebSocket, msg: object) {
+  const room = rooms.get(key);
+  if (!room) return;
+  const data = JSON.stringify(msg);
+  for (const [ws] of room) {
+    if (ws !== from && ws.readyState === WebSocket.OPEN) {
+      ws.send(data);
+    }
+  }
+}
+
+function handleMessage(ws: WebSocket, raw: string) {
+  let msg: Record<string, unknown>;
+  try { msg = JSON.parse(raw); } catch { return; }
+
+  if (msg.type === "join") {
+    const { userId, name, color, siteId, pageId } = msg as Record<string, string>;
+    if (!userId || !siteId || !pageId) return;
+
+    console.log("[ws] join:", name, userId, "room:", siteId, pageId);
+
+    for (const [key, existing] of rooms) {
+      if (existing.delete(ws)) {
+        console.log("[ws] removed from previous room:", key);
+      }
+    }
+
+    const key = roomKey(siteId, pageId);
+    const room = getRoom(key);
+    for (const [, info] of room) {
+      ws.send(JSON.stringify({ type: "join", userId: info.userId, name: info.name, color: info.color }));
+    }
+    room.set(ws, { userId, name, color, siteId, pageId });
+    broadcast(key, ws, { type: "join", userId, name, color });
+  }
+
+  if (msg.type === "cursor") {
+    const info = findClient(ws);
+    if (!info) return;
+    const key = roomKey(info.siteId, info.pageId);
+    const room = rooms.get(key);
+    if (room) console.log("[ws] cursor from", info.name, "room:", key, "members:", room.size);
+    broadcast(key, ws, { type: "cursor", userId: info.userId, x: msg.x, y: msg.y });
+  }
+}
+
+function findClient(ws: WebSocket): ClientInfo | undefined {
+  for (const [, room] of rooms) {
+    const info = room.get(ws);
+    if (info) return info;
+  }
+  return undefined;
+}
+
+function handleDisconnect(ws: WebSocket) {
+  for (const [key, room] of rooms) {
+    const info = room.get(ws);
+    if (info) {
+      console.log("[ws] disconnect:", info.name, "room:", key);
+      room.delete(ws);
+      broadcast(key, ws, { type: "leave", userId: info.userId });
+      if (room.size === 0) rooms.delete(key);
+      return;
+    }
+  }
+}
+
 interface CreateServerOptions {
   port?: number;
   hostname?: string;
@@ -36,6 +117,16 @@ export function createServer(options: CreateServerOptions) {
 
   Deno.serve({ port, hostname }, async (req: Request) => {
     const url = new URL(req.url);
+
+    if (url.pathname === "/ws" && req.headers.get("upgrade") === "websocket") {
+      const { socket, response } = Deno.upgradeWebSocket(req);
+      console.log("[ws] new connection from", req.headers.get("host"));
+      socket.onopen = () => {};
+      socket.onmessage = (ev) => handleMessage(socket, ev.data as string);
+      socket.onclose = () => handleDisconnect(socket);
+      socket.onerror = () => handleDisconnect(socket);
+      return response;
+    }
 
     if (url.pathname === "/api/tailwind" && req.method === "POST" && tailwindCSS) {
       const body = await req.json();

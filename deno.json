@@ -36,5 +36,8 @@
     "noUncheckedIndexedAccess": true,
     "jsx": "react-jsx",
     "jsxImportSource": "react"
+  },
+  "imports": {
+    "ws": "npm:ws@^8.21.0"
   }
 }

@@ -12,6 +12,7 @@ import { collectionsRoute } from "./routes/collections";
 import { documentsRoute, batchDocumentsRoute } from "./routes/documents";
 import { cmsQueryRoute } from "./routes/cms-query";
 import { adminUsersRoute } from "./routes/admin-users";
+import { siteMembersRoute } from "./routes/site-members";
 
 const app = new Hono<{ Variables: { user: typeof auth.$Infer.Session.user | null; session: typeof auth.$Infer.Session.session | null } }>();
 
@@ -46,6 +47,7 @@ app.route("/documents", documentsRoute);
 app.route("/documents/batch", batchDocumentsRoute);
 app.route("/cms/query", cmsQueryRoute);
 app.route("/admin/users", adminUsersRoute);
+app.route("/site-members", siteMembersRoute);
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 

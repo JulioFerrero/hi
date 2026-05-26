@@ -74,6 +74,20 @@ export const sites = pgTable("sites", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const siteMembers = pgTable("site_members", {
+  id: varchar("id", { length: 21 }).primaryKey(),
+  siteId: varchar("site_id", { length: 21 })
+    .notNull()
+    .references(() => sites.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  siteUserIdx: index("site_members_site_user_idx").on(table.siteId, table.userId),
+  userIdx: index("site_members_user_id_idx").on(table.userId),
+}));
+
 export const pages = pgTable("pages", {
   id: varchar("id", { length: 21 }).primaryKey(),
   siteId: varchar("site_id", { length: 21 })
@@ -157,6 +171,7 @@ export const sitesRelations = relations(sites, ({ many }) => ({
   files: many(files),
   collections: many(collections),
   documents: many(documents),
+  members: many(siteMembers),
 }));
 
 export const pagesRelations = relations(pages, ({ one, many }) => ({
@@ -184,6 +199,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+  siteMemberships: many(siteMembers),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -192,6 +208,11 @@ export const sessionRelations = relations(session, ({ one }) => ({
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
+}));
+
+export const siteMembersRelations = relations(siteMembers, ({ one }) => ({
+  site: one(sites, { fields: [siteMembers.siteId], references: [sites.id] }),
+  user: one(user, { fields: [siteMembers.userId], references: [user.id] }),
 }));
 
 export type SiteData = {

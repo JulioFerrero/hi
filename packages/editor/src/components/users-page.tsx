@@ -19,7 +19,7 @@ interface UserEntry {
   createdAt: string;
 }
 
-export function UsersPage({ onBack }: { onBack: () => void }) {
+export function UsersPage({ onBack: _onBack }: { onBack: () => void }) {
   const [users, setUsers] = useState<UserEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -93,9 +93,9 @@ export function UsersPage({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="flex h-14 items-center px-6 border-b border-border/40">
-        <button onClick={onBack} className="text-sm text-muted-foreground hover:text-foreground transition-colors mr-4">
+        <a href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors mr-4">
           &larr; Back
-        </button>
+        </a>
         <h1 className="text-base font-semibold text-foreground">User Management</h1>
         <div className="ml-auto">
           <Button size="sm" onClick={() => setShowCreate(true)}>

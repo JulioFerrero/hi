@@ -4,7 +4,8 @@
   "exports": {
     ".": "./src/auth.ts",
     "./client": "./src/auth-client.ts",
-    "./middleware": "./src/middleware.ts"
+    "./middleware": "./src/middleware.ts",
+    "./crypto": "./src/crypto.ts"
   },
   "imports": {
     "better-auth": "npm:better-auth@^1.6.0",
