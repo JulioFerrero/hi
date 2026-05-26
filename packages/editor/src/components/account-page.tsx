@@ -6,7 +6,7 @@ import { Button } from "@hi/ui/button";
 import { Input } from "@hi/ui/input";
 import { createApiFetch } from "../lib/api";
 import { cn } from "@hi/utils";
-import { ArrowLeft, Lock, Trash2, Camera, Check, ShieldCheck, Loader2 } from "lucide-react";
+import { ArrowLeft, Lock, Trash2, Camera, Check, ShieldCheck, Loader2, Palette } from "lucide-react";
 import { navigate } from "../lib/navigate";
 
 const api = createApiFetch();
@@ -17,6 +17,7 @@ export function AccountPage({ onBack }: { onBack: () => void }) {
 
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
+  const [cursorColor, setCursorColor] = useState((user as Record<string, unknown>)?.cursorColor as string ?? "#7B61FF");
   const [profileMsg, setProfileMsg] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -55,9 +56,14 @@ export function AccountPage({ onBack }: { onBack: () => void }) {
     setSaving(true);
     setProfileMsg("");
     try {
+      const updates: Record<string, string> = {};
+      if (name !== user.name) updates.name = name;
+      if (email !== user.email) updates.email = email;
+      if (cursorColor !== ((user as Record<string, unknown>).cursorColor as string ?? "#7B61FF")) updates.cursorColor = cursorColor;
+      if (Object.keys(updates).length === 0) { setSaving(false); return; }
       const res = await api.fetch("/auth/update-user", {
         method: "POST",
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify(updates),
       });
       const data = res as { status?: boolean; message?: string };
       setProfileMsg(data.status === false || data.message ? (data.message ?? "Error") : "Profile updated");
@@ -172,6 +178,34 @@ export function AccountPage({ onBack }: { onBack: () => void }) {
                 <label className="block text-[11px] font-medium text-white/35 mb-1.5">Email</label>
                 <Input type="email" value={email} onChange={(e) => setEmail((e.target as HTMLInputElement).value)} placeholder="you@example.com"
                   className="h-10 rounded-lg border-white/[0.06] bg-white/[0.02] text-sm text-white/75 placeholder:text-white/15 focus:border-white/[0.12] focus:bg-white/[0.03]" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-white/35 mb-1.5">Cursor Color</label>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <input
+                      type="color"
+                      value={cursorColor}
+                      onChange={(e) => setCursorColor(e.target.value)}
+                      className="h-10 w-12 rounded-lg border border-white/[0.06] bg-white/[0.02] cursor-pointer appearance-none [&::-webkit-color-swatch-wrapper]:p-1 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {["#7B61FF", "#FF6B6B", "#4ECDC4", "#FFE66D", "#FF8A5C", "#A8E6CF", "#FF61D2", "#6C5CE7"].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setCursorColor(c)}
+                        className={cn(
+                          "h-6 w-6 rounded-full border-2 transition-all",
+                          cursorColor === c ? "border-white/60 scale-110" : "border-transparent hover:border-white/20",
+                        )}
+                        style={{ background: c }}
+                      />
+                    ))}
+                  </div>
+                  <Palette className="h-4 w-4 text-white/20 ml-1" />
+                </div>
               </div>
             </div>
             {profileMsg && (

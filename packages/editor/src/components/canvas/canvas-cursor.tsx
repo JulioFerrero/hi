@@ -28,15 +28,31 @@ export function CanvasCursor({
 
     const onMove = (e: MouseEvent) => {
       cancelAnimationFrame(frameRef.current);
-      frameRef.current = requestAnimationFrame(() => setPos({ x: e.clientX, y: e.clientY }));
+      frameRef.current = requestAnimationFrame(() => {
+        setPos({ x: e.clientX, y: e.clientY });
+      });
     };
     const onEnter = () => setInContainer(true);
     const onLeave = () => setInContainer(false);
+
+    const initHandler = (e: MouseEvent) => {
+      const r = container.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        if (container.contains(target)) {
+          setInContainer(true);
+          setPos({ x: e.clientX, y: e.clientY });
+        }
+      }
+      document.removeEventListener("mousemove", initHandler);
+    };
+    document.addEventListener("mousemove", initHandler);
 
     container.addEventListener("mousemove", onMove);
     container.addEventListener("mouseenter", onEnter);
     container.addEventListener("mouseleave", onLeave);
     return () => {
+      document.removeEventListener("mousemove", initHandler);
       container.removeEventListener("mousemove", onMove);
       container.removeEventListener("mouseenter", onEnter);
       container.removeEventListener("mouseleave", onLeave);

@@ -8,6 +8,7 @@ export type SaveStatus = "idle" | "saving" | "saved";
 
 export interface EditorState {
   activeSiteId: string | null;
+  activeSiteName: string | null;
   activePageId: string | null;
   selectedElementId: string | null;
   hoveredElementId: string | null;
@@ -25,6 +26,7 @@ export interface EditorState {
 
 export interface EditorActions {
   setActiveSite: (id: string) => void;
+  setActiveSiteName: (name: string | null) => void;
   setActivePage: (id: string) => void;
   setViewport: (viewport: Viewport) => void;
   setPages: (pages: PageItem[]) => void;
@@ -54,6 +56,7 @@ export type EditorStore = EditorState & EditorActions;
 
 export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
   activeSiteId: null,
+  activeSiteName: null,
   activePageId: null,
   selectedElementId: null,
   hoveredElementId: null,
@@ -68,7 +71,8 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
   _history: [],
   _historyIndex: -1,
 
-  setActiveSite: (id) => set({ activeSiteId: id, activePageId: null, selectedElementId: null, _history: [], _historyIndex: -1 }),
+  setActiveSite: (id) => set({ activeSiteId: id, activeSiteName: null, activePageId: null, selectedElementId: null, _history: [], _historyIndex: -1 }),
+  setActiveSiteName: (name) => set({ activeSiteName: name }),
   setActivePage: (id) => set({ activePageId: id, selectedElementId: null }),
   setViewport: (viewport) => set({ viewport }),
   setPages: (pages) => set({ pages, dirtyPageIds: new Set() }),

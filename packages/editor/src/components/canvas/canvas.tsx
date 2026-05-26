@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useEditorStore } from "../../stores";
 import { useEditorContext } from "../../lib/context";
+import { useSession } from "@hi/auth/client";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
 import { usePanZoom } from "./use-pan-zoom";
 import { useBlockerEvents } from "./use-blocker-events";
@@ -31,6 +32,9 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
   const activePageId = useEditorStore((s) => s.activePageId);
   const activeSiteId = useEditorStore((s) => s.activeSiteId);
   const { schema, actions, renderer, api } = useEditorContext();
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? "";
+  const userColor = (session?.user as Record<string, unknown> | undefined)?.cursorColor as string ?? "#7B61FF";
 
   const resolvedContent = useResolvedElements(content, schema, api, activeSiteId ?? "");
 
@@ -66,7 +70,7 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
             />
           </div>
         </div>
-        <CanvasCursor containerRef={containerRef} mode={cursorMode} name="Julio" color="#7B61FF" visible={cursorVisible} dragLabel={dragLabel} />
+        <CanvasCursor containerRef={containerRef} mode={cursorMode} name={userName} color={userColor} visible={cursorVisible} dragLabel={dragLabel} />
         <div ref={toolbarRef} className="absolute bottom-0 z-20 pointer-events-auto transition-all duration-200 ease-in-out" style={{ cursor: "default", left: leftPanelOpen ? 240 : 0, right: rightPanelOpen ? 240 : 0 }} onMouseEnter={() => setCursorVisible(false)} onMouseLeave={() => setCursorVisible(true)}>
           <CanvasToolbar
             pageId={activePageId}

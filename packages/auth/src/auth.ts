@@ -40,6 +40,12 @@ export const auth = betterAuth({
         defaultValue: "user",
         input: false,
       },
+      cursorColor: {
+        type: "string",
+        required: false,
+        defaultValue: "#7B61FF",
+        input: true,
+      },
     },
   },
   databaseHooks: {

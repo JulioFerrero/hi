@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession, authClient } from "@hi/auth/client";
+import { useSession } from "@hi/auth/client";
 import { LoginPage } from "./login-page";
 import { SetupPage } from "./setup-page";
 
@@ -12,31 +12,21 @@ interface AuthGateProps {
 
 export function AuthGate({ children, api }: AuthGateProps) {
   const { data: session, isPending, refetch } = useSession();
-  const [mode, setMode] = useState<"loading" | "setup" | "login" | "ready">("loading");
+  const [hasUsers, setHasUsers] = useState<boolean | null>(null);
 
   useEffect(() => {
     async function check() {
       try {
-        const hasUsers = await api.fetch("/auth/has-users");
-        if (!(hasUsers as { exists: boolean }).exists) {
-          setMode("setup");
-        } else {
-          setMode("login");
-        }
+        const result = await api.fetch("/auth/has-users");
+        setHasUsers((result as { exists: boolean }).exists);
       } catch {
-        setMode("login");
+        setHasUsers(true);
       }
     }
     check();
   }, [api]);
 
-  useEffect(() => {
-    if (session) {
-      setMode("ready");
-    }
-  }, [session]);
-
-  if (mode === "loading" || isPending) {
+  if (isPending || hasUsers === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="h-8 w-8 border-2 border-white/10 border-t-white/30 rounded-full animate-spin" />
@@ -44,11 +34,11 @@ export function AuthGate({ children, api }: AuthGateProps) {
     );
   }
 
-  if (mode === "setup") {
+  if (!hasUsers) {
     return <SetupPage onDone={refetch} />;
   }
 
-  if (mode === "login") {
+  if (!session) {
     return <LoginPage onSuccess={refetch} />;
   }
 

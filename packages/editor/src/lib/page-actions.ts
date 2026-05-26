@@ -5,6 +5,10 @@ export function createPageActions(api: EditorApi) {
   const store = useEditorStore;
 
   return {
+    loadSite(siteId: string): Promise<unknown> {
+      return api.fetch(`/sites/${siteId}`);
+    },
+
     loadSites(): Promise<unknown> {
       return api.fetch("/sites");
     },

@@ -16,6 +16,10 @@ function ensureInit(siteId: string, actions: ReturnType<typeof import("../lib/ac
     const store = useEditorStore.getState();
     store.setActiveSite(siteId);
 
+    const site = await actions.loadSite(siteId);
+    const siteData = site as { data?: { name?: string } } | null;
+    if (siteData?.data?.name) store.setActiveSiteName(siteData.data.name);
+
     const pages = await actions.loadPages(siteId);
 
     const pageId = pages[0]?.id;
