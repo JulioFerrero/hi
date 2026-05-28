@@ -211,8 +211,8 @@ my-site/
 | 5 | Convert local paths to JSR specifiers | 1.1 | Pending |
 | 6 | Dry-run publish all packages | 1.4 | Pending |
 | 7 | Publish to JSR | 1.3 | Pending |
-| 8 | Rewrite Dockerfiles (Deno) | 2.1 | Pending |
-| 9 | Unified docker-compose.yml | 2.2 | Pending |
-| 10 | Coolify template + nixpacks | 2.3-2.4 | Pending |
-| 11 | `@hi/create` scaffolder | 3 | Pending |
+| 8 | Rewrite Dockerfiles (Deno) | 2.1 | Done |
+| 9 | Unified docker-compose.yml | 2.2 | Done |
+| 10 | Coolify template + nixpacks | 2.3-2.4 | Done |
+| 11 | `@hi/create` scaffolder | 3 | Done |
 | 12 | Documentation | 4 | Pending |
