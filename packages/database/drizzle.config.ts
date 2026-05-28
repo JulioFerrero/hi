@@ -1,9 +1,6 @@
 import { defineConfig } from "drizzle-kit";
 
-const connectionString = (() => {
-  try { return Deno.env.get("DATABASE_URL"); } catch { /* deno not available */ }
-  return process.env.DATABASE_URL;
-})();
+const connectionString = Deno.env.get("DATABASE_URL");
 
 export default defineConfig({
   schema: "./packages/database/src/schema.ts",

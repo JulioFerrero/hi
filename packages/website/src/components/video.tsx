@@ -1,6 +1,7 @@
+import React from "react";
 import type { ElementProps } from "@hi/render";
 
-export function Video({ element, className, style, attrs }: ElementProps) {
+function VideoInner({ element, className, style, attrs }: ElementProps) {
   const d = element.data as { src?: string; autoPlay?: boolean; loop?: boolean };
   return (
     <video
@@ -14,3 +15,5 @@ export function Video({ element, className, style, attrs }: ElementProps) {
     />
   );
 }
+
+export const Video = React.memo(VideoInner);

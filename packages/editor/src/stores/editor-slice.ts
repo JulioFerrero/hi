@@ -50,6 +50,7 @@ export interface EditorActions {
   redo: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
+  applyRemoteUpdate: (id: string, patch: { data?: Record<string, unknown>; styles?: Record<string, string> }) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -167,6 +168,12 @@ export const createEditorSlice: StateCreator<EditorStore> = (set, get) => ({
     set((s) => {
       const clone = cloneTree(s.content);
       moveNode(clone, id, newParentId, index);
+      return { content: clone, isDirty: true, hasActiveDraft: true };
+    }),
+  applyRemoteUpdate: (id, patch) =>
+    set((s) => {
+      const clone = cloneTree(s.content);
+      updateById(clone, id, patch);
       return { content: clone, isDirty: true, hasActiveDraft: true };
     }),
   setDirty: (dirty) => set((s) => ({ isDirty: dirty, saveStatus: dirty ? "idle" : s.saveStatus })),

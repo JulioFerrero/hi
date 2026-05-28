@@ -16,8 +16,10 @@ export function useInlineEditing(
     if (!target) return;
     target.contentEditable = "false";
     target.style.cursor = "";
-    const elId = target.getAttribute("data-el-id")!;
-    actions.updateNodeData(elId, { content: target.innerText });
+    if (target.isConnected) {
+      const elId = target.getAttribute("data-el-id")!;
+      actions.updateNodeData(elId, { content: target.innerText });
+    }
     editingRef.current = null;
     setCursorMode("default");
   }, [actions, setCursorMode]);

@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useEditorStore } from "../../stores";
+import {
+  getCollabSocket,
+  setCollabSocket,
+  sendCursor,
+  handleCollabMessage,
+} from "../../lib/collab-bridge";
 
 export interface RemoteCursor {
   userId: string;
@@ -19,8 +25,6 @@ export function useCursorSync(
 ) {
   const cursorsRef = useRef<CursorMap>(new Map());
   const listenersRef = useRef<Set<() => void>>(new Set());
-  const wsRef = useRef<WebSocket | null>(null);
-  const joinedRef = useRef(false);
 
   const activeSiteId = useEditorStore((s) => s.activeSiteId);
   const activePageId = useEditorStore((s) => s.activePageId);
@@ -41,11 +45,10 @@ export function useCursorSync(
 
     const proto = globalThis.location.protocol === "https:" ? "wss:" : "ws:";
     const ws = new WebSocket(`${proto}//${globalThis.location.host}/ws`);
-    wsRef.current = ws;
+    setCollabSocket(ws);
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ type: "join", userId, name: userName, color: userColor, siteId: activeSiteId, pageId: activePageId }));
-      joinedRef.current = true;
     };
 
     ws.onmessage = (ev) => {
@@ -78,35 +81,33 @@ export function useCursorSync(
         cursorsRef.current.delete(msg.userId as string);
         notify();
       }
+
+      handleCollabMessage(msg);
     };
 
-    ws.onclose = () => { wsRef.current = null; joinedRef.current = false; };
-    ws.onerror = () => { wsRef.current = null; joinedRef.current = false; };
+    ws.onclose = () => { setCollabSocket(null); };
+    ws.onerror = () => { setCollabSocket(null); };
 
     return () => {
       ws.close();
-      wsRef.current = null;
-      joinedRef.current = false;
+      setCollabSocket(null);
       cursorsRef.current.clear();
     };
   }, [userId, userName, userColor, activeSiteId, activePageId, notify]);
 
-  const sendCursor = useCallback((x: number, y: number) => {
-    const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "cursor", x, y }));
-    }
+  const localSendCursor = useCallback((x: number, y: number) => {
+    sendCursor(x, y);
   }, []);
 
   const rejoin = useCallback((newPageId: string) => {
-    const ws = wsRef.current;
+    const ws = getCollabSocket();
     if (!ws || ws.readyState !== WebSocket.OPEN || !activeSiteId) return;
     cursorsRef.current.clear();
     notify();
     ws.send(JSON.stringify({ type: "join", userId, name: userName, color: userColor, siteId: activeSiteId, pageId: newPageId }));
   }, [userId, userName, userColor, activeSiteId, notify]);
 
-  return { subscribe, getSnap, sendCursor, rejoin };
+  return { subscribe, getSnap, sendCursor: localSendCursor, rejoin };
 }
 
 export function useRemoteCursors(

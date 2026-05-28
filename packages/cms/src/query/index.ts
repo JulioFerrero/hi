@@ -5,7 +5,7 @@ export type CmsFetchFn = (path: string, init?: RequestInit) => Promise<unknown>;
 
 export function createCmsClient(api: { fetch: CmsFetchFn }) {
   class RuntimeQueryBuilder extends QueryBuilder {
-    async execute(): Promise<QueryResult> {
+    override async execute(): Promise<QueryResult> {
       const spec = this.toJSON();
       const result = await api.fetch("/cms/query", {
         method: "POST",

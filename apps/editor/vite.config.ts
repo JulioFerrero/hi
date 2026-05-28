@@ -38,6 +38,21 @@ function handleWsCursor(wss: InstanceType<typeof WebSocketServer>, ws: WebSocket
   }
 }
 
+function handleWsUpdate(wss: InstanceType<typeof WebSocketServer>, ws: WebSocket, msg: Record<string, unknown>) {
+  const info = wsRooms.get(ws);
+  if (!info) return;
+  const key = wsRoomKey(info.siteId, info.pageId);
+  const elementId = msg.elementId as string;
+  const patch = msg.patch as Record<string, unknown>;
+  if (!elementId || !patch) return;
+  const data = JSON.stringify({ type: "update", elementId, patch });
+  for (const [other, otherInfo] of wsRooms) {
+    if (other !== ws && other.readyState === 1 && wsRoomKey(otherInfo.siteId, otherInfo.pageId) === key) {
+      other.send(data);
+    }
+  }
+}
+
 function handleWsLeave(wss: InstanceType<typeof WebSocketServer>, ws: WebSocket) {
   const info = wsRooms.get(ws);
   if (!info) return;
@@ -91,6 +106,7 @@ function apiPlugin(): Plugin {
               try { msg = JSON.parse(raw.toString()); } catch { return; }
               if (msg.type === "join") handleWsJoin(wss, ws, msg);
               if (msg.type === "cursor") handleWsCursor(wss, ws, msg);
+              if (msg.type === "update") handleWsUpdate(wss, ws, msg);
             });
             ws.on("close", () => handleWsLeave(wss, ws));
           });

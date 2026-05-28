@@ -1,10 +1,14 @@
 {
   "name": "@hi/database",
   "version": "0.1.0",
+  "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./schema": "./src/schema.ts"
+  },
+  "publish": {
+    "include": ["src", "deno.json"]
   },
   "imports": {
     "drizzle-orm": "npm:drizzle-orm@^0.43.0",

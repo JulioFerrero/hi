@@ -60,6 +60,16 @@ function handleMessage(ws: WebSocket, raw: string) {
     if (room) console.log("[ws] cursor from", info.name, "room:", key, "members:", room.size);
     broadcast(key, ws, { type: "cursor", userId: info.userId, x: msg.x, y: msg.y });
   }
+
+  if (msg.type === "update") {
+    const info = findClient(ws);
+    if (!info) return;
+    const key = roomKey(info.siteId, info.pageId);
+    const elementId = msg.elementId as string;
+    const patch = msg.patch as Record<string, unknown>;
+    if (!elementId || !patch) return;
+    broadcast(key, ws, { type: "update", elementId, patch });
+  }
 }
 
 function findClient(ws: WebSocket): ClientInfo | undefined {

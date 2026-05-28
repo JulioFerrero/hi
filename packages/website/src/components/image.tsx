@@ -1,6 +1,7 @@
+import React from "react";
 import type { ElementProps } from "@hi/render";
 
-export function Image({ element, className, style, attrs }: ElementProps) {
+function ImageInner({ element, className, style, attrs }: ElementProps) {
   const d = element.data as { src?: string; alt?: string };
   return (
     <img
@@ -13,3 +14,5 @@ export function Image({ element, className, style, attrs }: ElementProps) {
     />
   );
 }
+
+export const Image = React.memo(ImageInner);

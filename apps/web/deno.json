@@ -1,7 +1,7 @@
 {
   "name": "@hi/web",
   "version": "0.1.0",
-  "exports": { ".": "./main.ts" },
+  "publish": { "exclude": ["."] },
   "tasks": {
     "dev": "deno run -A --env=../../.env npm:vite",
     "build": "vite build",

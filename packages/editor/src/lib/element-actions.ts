@@ -1,6 +1,7 @@
 import { useEditorStore } from "../stores";
 import type { EditorApi, EditorSchema, PageElement } from "../types";
 import { createElement } from "@hi/render";
+import { sendCollabUpdate } from "./collab-bridge";
 
 export function createElementActions(api: EditorApi, schema: EditorSchema) {
   const store = useEditorStore;
@@ -37,11 +38,13 @@ export function createElementActions(api: EditorApi, schema: EditorSchema) {
     updateNodeData(id: string, data: Record<string, unknown>) {
       store.getState().pushHistory();
       store.getState().updateNode(id, { data });
+      sendCollabUpdate(id, { data });
     },
 
     updateNodeStyles(id: string, styles: Record<string, string>) {
       store.getState().pushHistory();
       store.getState().updateNode(id, { styles });
+      sendCollabUpdate(id, { styles });
     },
 
     deleteNode(id: string) {

@@ -8,8 +8,9 @@ export interface PageElement {
 
 export function findById(tree: PageElement[], id: string): { element: PageElement; parent: PageElement | null; index: number } | null {
   for (let i = 0; i < tree.length; i++) {
-    if (tree[i].id === id) return { element: tree[i], parent: null, index: i };
-    const found = findInChildren(tree[i].children, id, tree[i]);
+    const el = tree[i]!;
+    if (el.id === id) return { element: el, parent: null, index: i };
+    const found = findInChildren(el.children, id, el);
     if (found) return found;
   }
   return null;
@@ -17,8 +18,9 @@ export function findById(tree: PageElement[], id: string): { element: PageElemen
 
 function findInChildren(children: PageElement[], id: string, parent: PageElement): { element: PageElement; parent: PageElement; index: number } | null {
   for (let i = 0; i < children.length; i++) {
-    if (children[i].id === id) return { element: children[i], parent, index: i };
-    const found = findInChildren(children[i].children, id, children[i]);
+    const child = children[i]!;
+    if (child.id === id) return { element: child, parent, index: i };
+    const found = findInChildren(child.children, id, child);
     if (found) return found;
   }
   return null;

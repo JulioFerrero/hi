@@ -49,9 +49,10 @@ function resolveElements(
   refMap: Record<string, { field: string; collection: string; multiple: boolean }[]>,
   cache: Map<string, unknown>,
 ): PageElement[] {
-  return content.map((el) => {
+  let anyChanged = false;
+  const resolved = content.map((el) => {
     const refs = refMap[el.type];
-    let changed = false;
+    let dataChanged = false;
     const resolvedData = { ...el.data };
 
     if (refs) {
@@ -60,26 +61,43 @@ function resolveElements(
         if (!value) continue;
 
         if (ref.multiple && Array.isArray(value)) {
-          resolvedData[ref.field] = value
+          const newResolved = value
             .map((id) => cache.get(String(id)) ?? null)
             .filter(Boolean);
-          changed = true;
+          const prev = el.data[ref.field] as unknown[];
+          if (!Array.isArray(prev) || prev.length !== newResolved.length || !prev.every((v, i) => v === newResolved[i])) {
+            resolvedData[ref.field] = newResolved;
+            dataChanged = true;
+          }
         } else if (typeof value === "string") {
           const resolved = cache.get(value);
-          if (resolved) {
+          if (resolved !== el.data[ref.field]) {
             resolvedData[ref.field] = resolved;
-            changed = true;
+            dataChanged = true;
           }
         }
       }
     }
 
+    const resolvedChildren = resolveElements(el.children, refMap, cache);
+    const childrenChanged = resolvedChildren !== el.children;
+
+    if (!dataChanged && !childrenChanged) {
+      return el;
+    }
+
+    anyChanged = true;
     return {
       ...el,
-      data: changed ? resolvedData : el.data,
-      children: resolveElements(el.children, refMap, cache),
+      data: dataChanged ? resolvedData : el.data,
+      children: resolvedChildren,
     };
   });
+
+  if (!anyChanged) {
+    return content;
+  }
+  return resolved;
 }
 
 export function useResolvedElements(
