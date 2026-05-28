@@ -1,15 +1,8 @@
-import { parseArgs } from "@std/cli";
 import { resolve } from "@std/path";
 import { ensureDir } from "@std/fs";
-import { prompt } from "./prompts.ts";
+import { parseArgs } from "@std/cli";
+import { parseFlags, promptInteractive } from "./prompts.ts";
 import { scaffold } from "./scaffold.ts";
-
-const flags = parseArgs(Deno.args, {
-  string: ["dir"],
-  boolean: ["preview"],
-  default: { dir: ".", preview: false },
-  alias: { d: "dir", p: "preview" },
-});
 
 const bold = "\x1b[1m";
 const cyan = "\x1b[36m";
@@ -18,12 +11,20 @@ const yellow = "\x1b[33m";
 const gray = "\x1b[90m";
 const reset = "\x1b[0m";
 
-console.log(`\n  ${bold}Hi!${reset} Let's set up your Editor project.\n`);
+const dirFlags = parseArgs(Deno.args, { string: ["dir"], boolean: ["preview"], default: { dir: ".", preview: false }, alias: { d: "dir", p: "preview" } });
+const outDir = dirFlags.dir || ".";
+const preview = dirFlags.preview;
 
-const answers = await prompt();
-const targetDir = resolve(flags.dir, answers.projectName);
+const answers = parseFlags(Deno.args) ?? await promptInteractive();
 
-if (flags.preview) {
+const hasName = Deno.args.find((a) => a === "--name" || a === "-n");
+if (!hasName) {
+  console.log(`\n  ${bold}Hi!${reset} Let's set up your Editor project.\n`);
+}
+
+const targetDir = resolve(outDir, answers.projectName);
+
+if (preview) {
   console.log(`\n  ${yellow}${bold}PREVIEW${reset} — no files will be written\n`);
   console.log(`  ${bold}Would create:${reset} ${cyan}${targetDir}/${reset}\n`);
   console.log(`  ${gray}my-site/`);
@@ -32,9 +33,7 @@ if (flags.preview) {
   console.log(`  │   └── editor/       visual editor`);
   console.log(`  ├── packages/`);
   console.log(`  │   └── website/      your components & elements`);
-  console.log(`  ├── deno.json         workspace root`);
-  console.log(`  ├── .env`);
-  console.log(`  └── docker-compose.yml${reset}\n`);
+  console.log(`  └── deno.json${reset}\n`);
 
   console.log(`  ${bold}Selected:${reset}`);
   console.log(`    Environment: ${answers.environment}`);

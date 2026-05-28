@@ -1,4 +1,5 @@
 import { Input, Select, Confirm, Toggle } from "@cliffy/prompt";
+import { parseArgs } from "@std/cli";
 
 export type Environment = "vps" | "local" | "cloud";
 export type StorageOption = "seaweedfs" | "s3" | "skip";
@@ -16,7 +17,32 @@ export interface PromptAnswers {
   startNow: boolean;
 }
 
-export async function prompt(): Promise<PromptAnswers> {
+export function parseFlags(args: string[]): PromptAnswers | null {
+  const flags = parseArgs(args, {
+    string: ["name", "env", "framework", "storage", "cloud"],
+    boolean: ["examples", "git", "start"],
+    default: { examples: true, git: true, start: false },
+  });
+
+  if (!flags.name) return null;
+
+  const env = (flags.env || "local") as Environment;
+  const storage = (flags.storage || (env === "vps" ? "seaweedfs" : "skip")) as StorageOption;
+  const cloudProvider = flags.cloud as CloudProvider | undefined;
+
+  return {
+    projectName: flags.name,
+    framework: (flags.framework || "fresh") as Framework,
+    environment: env,
+    storage,
+    cloudProvider: cloudProvider || (env === "cloud" ? "vercel" : undefined),
+    includeExamples: flags.examples,
+    initGit: flags.git,
+    startNow: flags.start && env === "local",
+  };
+}
+
+export async function promptInteractive(): Promise<PromptAnswers> {
   const os = Deno.build.os;
   const osLabel = os === "darwin" ? "macOS" : os === "windows" ? "Windows" : "Linux";
 
