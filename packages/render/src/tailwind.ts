@@ -36,11 +36,13 @@ function extractClasses(html: string): string[] {
   return [...classes].sort();
 }
 
+/** Tailwind CSS generator interface for server-side style generation. */
 export interface TailwindGenerator {
   generateCSS(classes: string[], genPath?: string): Promise<string>;
   htmlMiddleware(): (_ctx: unknown, next: () => Promise<Response>) => Promise<Response>;
 }
 
+/** Create a Tailwind CSS generator with caching and optional HTML middleware. */
 export function createTailwindGenerator(options: { themePath: string; stylesPath?: string }): TailwindGenerator {
   const { themePath, stylesPath } = options;
   const activeThemePath = stylesPath ?? themePath;

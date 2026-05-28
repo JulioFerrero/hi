@@ -1,3 +1,4 @@
+/** Represents a node in the page element tree. */
 export interface PageElement {
   id: string;
   type: string;
@@ -6,6 +7,7 @@ export interface PageElement {
   children: PageElement[];
 }
 
+/** Find an element by ID, returning the element, its parent, and its index. */
 export function findById(tree: PageElement[], id: string): { element: PageElement; parent: PageElement | null; index: number } | null {
   for (let i = 0; i < tree.length; i++) {
     const el = tree[i]!;
@@ -26,10 +28,12 @@ function findInChildren(children: PageElement[], id: string, parent: PageElement
   return null;
 }
 
+/** Find and return an element by ID, or null if not found. */
 export function findElementById(tree: PageElement[], id: string): PageElement | null {
   return findById(tree, id)?.element ?? null;
 }
 
+/** Insert a child element under a parent, optionally at a specific index. */
 export function insertChild(tree: PageElement[], parentId: string, element: PageElement, index?: number): void {
   const result = findById(tree, parentId);
   if (!result) {
@@ -45,6 +49,7 @@ export function insertChild(tree: PageElement[], parentId: string, element: Page
   }
 }
 
+/** Remove an element by ID. Returns true if removed, false if not found. */
 export function removeById(tree: PageElement[], id: string): boolean {
   const result = findById(tree, id);
   if (!result) return false;
@@ -56,6 +61,7 @@ export function removeById(tree: PageElement[], id: string): boolean {
   return true;
 }
 
+/** Update an element's data, styles, and/or type by ID. Returns true if found. */
 export function updateById(tree: PageElement[], id: string, patch: { data?: Record<string, unknown>; styles?: Record<string, string>; type?: string }): boolean {
   const el = findElementById(tree, id);
   if (!el) return false;
@@ -65,6 +71,7 @@ export function updateById(tree: PageElement[], id: string, patch: { data?: Reco
   return true;
 }
 
+/** Move an element to a new parent (or root) at an optional index. */
 export function moveNode(tree: PageElement[], id: string, newParentId: string | null, index?: number): boolean {
   const result = findById(tree, id);
   if (!result) return false;
@@ -88,6 +95,7 @@ export function moveNode(tree: PageElement[], id: string, newParentId: string | 
   return true;
 }
 
+/** Duplicate an element (with a new ID) and insert it right after the original. */
 export function duplicateNode(tree: PageElement[], id: string, newId: string): PageElement | null {
   const el = findElementById(tree, id);
   if (!el) return null;
@@ -113,10 +121,12 @@ function deepCloneElement(el: PageElement, newId?: string): PageElement {
   };
 }
 
+/** Deep-clone an element tree, preserving original IDs. */
 export function cloneTree(tree: PageElement[]): PageElement[] {
   return tree.map((el) => deepCloneElement(el, el.id));
 }
 
+/** Walk the element tree depth-first, calling `fn` for each element. */
 export function walkTree(tree: PageElement[], fn: (el: PageElement, depth: number) => void, depth = 0): void {
   for (const el of tree) {
     fn(el, depth);
@@ -124,6 +134,7 @@ export function walkTree(tree: PageElement[], fn: (el: PageElement, depth: numbe
   }
 }
 
+/** Create a new page element with a generated UUID. */
 export function createElement(type: string, data?: Record<string, unknown>, styles?: Record<string, string>, children?: PageElement[]): PageElement {
   return {
     id: crypto.randomUUID(),
@@ -134,6 +145,7 @@ export function createElement(type: string, data?: Record<string, unknown>, styl
   };
 }
 
+/** Generate a random unique ID (UUID v4). */
 export function generateId(): string {
   try { return globalThis.crypto.randomUUID(); } catch { return Math.random().toString(36).slice(2, 11); }
 }

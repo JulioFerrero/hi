@@ -2,6 +2,7 @@ import type React from "react";
 import type { ElementProps } from "./types";
 import { classesFromStyles, inlineStylesFromTokens } from "./styles";
 
+/** Higher-order component that injects `className` and `style` from the element's styles. */
 export function withStyles<P extends Partial<ElementProps>>(
   Component: React.ComponentType<P>
 ): React.ComponentType<Omit<P, "className" | "style"> & { element: ElementProps["element"] }> {

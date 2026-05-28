@@ -1,3 +1,27 @@
+/**
+ * @hi/render — Element renderer, tree utilities, and Tailwind CSS generator.
+ *
+ * Renders page element trees using React components, provides immutable tree
+ * manipulation functions, and includes a Tailwind CSS generator for server-side
+ * style generation.
+ *
+ * ## Example
+ *
+ * ```tsx
+ * import { RenderPage, createElement } from "@hi/render";
+ *
+ * const tree = [
+ *   createElement("hero-section", { title: "Hello" }, { padding: "8" }),
+ * ];
+ *
+ * function App() {
+ *   return <RenderPage content={tree} renderer={myRenderer} />;
+ * }
+ * ```
+ *
+ * @module
+ */
+
 export { RenderPage, ElementRenderer, classesFromStyles, inlineStylesFromTokens } from "./renderer";
 export { withStyles } from "./with-styles";
 export { createTailwindGenerator } from "./tailwind";

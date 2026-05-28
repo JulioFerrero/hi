@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { RendererMap } from "./types";
 import { createTailwindGenerator } from "./tailwind";
 
+/** Configuration for a website rendering server. */
 export interface SiteConfig {
   database: { url: string };
   renderer: RendererMap;
@@ -9,10 +10,12 @@ export interface SiteConfig {
   fontsPath?: string;
 }
 
+/** Define a site configuration with type checking. */
 export function defineSiteConfig(config: SiteConfig): SiteConfig {
   return config;
 }
 
+/** Create a Hono server with Tailwind CSS generation endpoints. */
 export function createWebsiteServer(config: SiteConfig): Hono {
   const app = new Hono();
   const tw = createTailwindGenerator({

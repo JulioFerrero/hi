@@ -1,3 +1,4 @@
+/** Convert a styles object to a Tailwind CSS class string. */
 export function classesFromStyles(styles: Record<string, unknown>): string {
   const classes: string[] = [];
 
@@ -60,6 +61,7 @@ function styleToClass(key: string, value: string): string | null {
   }
 }
 
+/** Extract inline CSS styles from a styles object (hex colors, background images). */
 export function inlineStylesFromTokens(styles: Record<string, unknown>): React.CSSProperties {
   const result: Record<string, string> = {};
   if (styles.backgroundImage) result.backgroundImage = String(styles.backgroundImage);

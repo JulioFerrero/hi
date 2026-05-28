@@ -3,6 +3,7 @@ import type { RenderElement, RendererMap } from "./types";
 import { elAttrs } from "./types";
 import { classesFromStyles, inlineStylesFromTokens } from "./styles";
 
+/** @internal */
 function DefaultElement({ element, className, style, children, attrs }: { element: RenderElement; className: string; style: React.CSSProperties; children?: React.ReactNode; attrs: Record<string, string> }) {
   return (
     <div {...attrs} className={className} style={style}>
@@ -46,6 +47,7 @@ function elementEqual(prev: RenderElement, next: RenderElement): boolean {
   return true;
 }
 
+/** Renders a single element and its children using the provided renderer map. Memoized for performance. */
 function ElementRenderer({ element, renderer, editor }: { element: RenderElement; renderer: RendererMap; editor?: boolean }): React.ReactElement {
   const isEditor = editor ?? false;
   const className = classesFromStyles(element.styles as Record<string, unknown>);
@@ -65,6 +67,7 @@ function ElementRenderer({ element, renderer, editor }: { element: RenderElement
   return <DefaultElement element={element} className={className} style={style} attrs={attrs}>{children}</DefaultElement>;
 }
 
+/** Memoized version of {@link ElementRenderer} with deep element equality comparison. */
 const MemoElementRenderer: React.MemoExoticComponent<typeof ElementRenderer> = React.memo(ElementRenderer, (prev: { element: RenderElement; renderer: RendererMap; editor?: boolean }, next: { element: RenderElement; renderer: RendererMap; editor?: boolean }) => {
   if (prev.editor !== next.editor) return false;
   if (prev.renderer !== next.renderer) return false;
@@ -73,6 +76,7 @@ const MemoElementRenderer: React.MemoExoticComponent<typeof ElementRenderer> = R
 
 export { MemoElementRenderer as ElementRenderer };
 
+/** Renders an array of page elements using the provided renderer map. */
 export function RenderPage({ content, renderer, editor }: { content: RenderElement[]; renderer: RendererMap; editor?: boolean }): React.ReactElement {
   return <>{content.map((el) => <MemoElementRenderer key={el.id} element={el} renderer={renderer} editor={editor} />)}</>;
 }
