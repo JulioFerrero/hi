@@ -1,6 +1,6 @@
 {
   "name": "@hi/create",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "exports": {
     ".": "./src/main.ts"
@@ -11,6 +11,8 @@
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.0",
     "@std/fs": "jsr:@std/fs@^1.0.0",
-    "@std/path": "jsr:@std/path@^1.0.0"
+    "@std/path": "jsr:@std/path@^1.0.0",
+    "@cliffy/prompt": "jsr:@cliffy/prompt@^1.0.0",
+    "@cliffy/ansi": "jsr:@cliffy/ansi@^1.0.0"
   }
 }

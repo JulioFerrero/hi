@@ -1,6 +1,11 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@cliffy/ansi@1": "1.1.0",
+    "jsr:@cliffy/ansi@1.1.0": "1.1.0",
+    "jsr:@cliffy/internal@1.1.0": "1.1.0",
+    "jsr:@cliffy/keycode@1.1.0": "1.1.0",
+    "jsr:@cliffy/prompt@1": "1.1.0",
     "jsr:@deno/esbuild-plugin@^1.2.0": "1.2.1",
     "jsr:@deno/loader@0.4": "0.4.0",
     "jsr:@deno/loader@~0.3.10": "0.3.14",
@@ -13,15 +18,21 @@
     "jsr:@hono/hono@^4.8.3": "4.12.21",
     "jsr:@hono/zod-validator@0.8": "0.8.0",
     "jsr:@sitnik/nanoid@^5.1.11": "5.1.11",
+    "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/bytes@^1.0.6": "1.0.6",
+    "jsr:@std/cli@1": "1.0.29",
     "jsr:@std/dotenv@~0.225.5": "0.225.6",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fmt@^1.0.7": "1.0.10",
     "jsr:@std/fmt@^1.0.8": "1.0.10",
+    "jsr:@std/fmt@^1.0.9": "1.0.10",
+    "jsr:@std/fs@1": "1.0.23",
     "jsr:@std/fs@^1.0.19": "1.0.23",
     "jsr:@std/html@^1.0.5": "1.0.6",
     "jsr:@std/http@^1.0.21": "1.1.0",
     "jsr:@std/internal@^1.0.12": "1.0.13",
+    "jsr:@std/internal@^1.0.13": "1.0.13",
+    "jsr:@std/io@~0.225.3": "0.225.3",
     "jsr:@std/json@^1.0.2": "1.1.0",
     "jsr:@std/jsonc@^1.0.2": "1.0.2",
     "jsr:@std/media-types@1": "1.1.0",
@@ -32,6 +43,7 @@
     "jsr:@std/path@^1.1.2": "1.1.4",
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/semver@^1.0.6": "1.0.8",
+    "jsr:@std/text@^1.0.17": "1.0.19",
     "jsr:@std/uuid@^1.0.9": "1.1.1",
     "jsr:@zod/zod@^4.4.3": "4.4.3",
     "npm:@aws-sdk/client-s3@^3.750.0": "3.1053.0",
@@ -87,6 +99,33 @@
     "npm:zustand@5": "5.0.13_react@19.2.6"
   },
   "jsr": {
+    "@cliffy/ansi@1.1.0": {
+      "integrity": "f95946660bf07c34017b8eb09240f0ef346a201284be8f1c33f372410f59edf4",
+      "dependencies": [
+        "jsr:@cliffy/internal",
+        "jsr:@std/encoding",
+        "jsr:@std/io"
+      ]
+    },
+    "@cliffy/internal@1.1.0": {
+      "integrity": "433dd7755680d0da6b0a6186694327f6fd8e80807be314cf4bb06270bab28023"
+    },
+    "@cliffy/keycode@1.1.0": {
+      "integrity": "66c0bfa2e299f9158a20bdecd7fcf77c8499a9872c8888ab912fa28977bdff0d"
+    },
+    "@cliffy/prompt@1.1.0": {
+      "integrity": "111b5186a5920ebc6b6b5d14cf40f497e0015259fc2ceeb38a3abf4ace514494",
+      "dependencies": [
+        "jsr:@cliffy/ansi@1.1.0",
+        "jsr:@cliffy/internal",
+        "jsr:@cliffy/keycode",
+        "jsr:@std/assert",
+        "jsr:@std/fmt@^1.0.9",
+        "jsr:@std/io",
+        "jsr:@std/path@^1.1.4",
+        "jsr:@std/text"
+      ]
+    },
     "@deno/esbuild-plugin@1.2.1": {
       "integrity": "df629467913adc1f960149fdfa3a3430ba8c20381c310fba096db244e6c3c9f6",
       "dependencies": [
@@ -114,7 +153,7 @@
         "jsr:@fresh/build-id",
         "jsr:@std/encoding",
         "jsr:@std/fmt@^1.0.8",
-        "jsr:@std/fs",
+        "jsr:@std/fs@^1.0.19",
         "jsr:@std/html",
         "jsr:@std/http",
         "jsr:@std/jsonc",
@@ -172,8 +211,17 @@
     "@sitnik/nanoid@5.1.11": {
       "integrity": "5be5e0fa5daff0c1666bd1885943ff9859f28f409aaa550c9d15392c961e9f2c"
     },
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e"
+    },
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
+    },
+    "@std/cli@1.0.29": {
+      "integrity": "fa4ef29130baa834d8a13b7d138240c3a2fcfba740bfb7afa646a360a15ec84f",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.13"
+      ]
     },
     "@std/dotenv@0.225.6": {
       "integrity": "1d6f9db72f565bd26790fa034c26e45ecb260b5245417be76c2279e5734c421b"
@@ -187,6 +235,7 @@
     "@std/fs@1.0.23": {
       "integrity": "3ecbae4ce4fee03b180fa710caff36bb5adb66631c46a6460aaad49515565a37",
       "dependencies": [
+        "jsr:@std/internal@^1.0.12",
         "jsr:@std/path@^1.1.4"
       ]
     },
@@ -201,6 +250,9 @@
     },
     "@std/internal@1.0.13": {
       "integrity": "2f9546691d4ac2d32859c82dff284aaeac980ddeca38430d07941e7e288725c0"
+    },
+    "@std/io@0.225.3": {
+      "integrity": "27b07b591384d12d7b568f39e61dff966b8230559122df1e9fd11cc068f7ddd1"
     },
     "@std/json@1.1.0": {
       "integrity": "93330d3ed4054d6b1ffe54b075432c80a5f671be77277b978931e018014cb1cc"
@@ -220,11 +272,14 @@
     "@std/path@1.1.4": {
       "integrity": "1d2d43f39efb1b42f0b1882a25486647cb851481862dc7313390b2bb044314b5",
       "dependencies": [
-        "jsr:@std/internal"
+        "jsr:@std/internal@^1.0.12"
       ]
     },
     "@std/semver@1.0.8": {
       "integrity": "dc830e8b8b6a380c895d53fbfd1258dc253704ca57bbe1629ac65fd7830179b7"
+    },
+    "@std/text@1.0.19": {
+      "integrity": "003a0e032d360e8c3a4e0410fb792c77a66bd6553fee9d60c6ec1bce30d29223"
     },
     "@std/uuid@1.1.1": {
       "integrity": "7b49060282d90f72fec64952f8c7a2914cbe6fdba3eca665f8cedc90830154a7",
@@ -2846,11 +2901,23 @@
       },
       "packages/auth": {
         "dependencies": [
+          "jsr:@hi/database@0.1",
+          "jsr:@hi/utils@0.1",
+          "jsr:@hono/hono@^4.12.21",
           "npm:@better-auth/drizzle-adapter@^1.6.0",
           "npm:better-auth@^1.6.0",
           "npm:drizzle-orm@0.43",
           "npm:lucide-react@0.509",
           "npm:react@^19.1.0"
+        ]
+      },
+      "packages/create": {
+        "dependencies": [
+          "jsr:@cliffy/ansi@1",
+          "jsr:@cliffy/prompt@1",
+          "jsr:@std/cli@1",
+          "jsr:@std/fs@1",
+          "jsr:@std/path@1"
         ]
       },
       "packages/database": {
@@ -2863,6 +2930,12 @@
       },
       "packages/editor": {
         "dependencies": [
+          "jsr:@hi/auth@0.1",
+          "jsr:@hi/cms@0.1",
+          "jsr:@hi/database@0.1",
+          "jsr:@hi/render@0.1",
+          "jsr:@hi/ui@0.1",
+          "jsr:@hi/utils@0.1",
           "jsr:@hono/hono@^4.12.21",
           "jsr:@hono/zod-validator@0.8",
           "jsr:@sitnik/nanoid@^5.1.11",
@@ -2888,6 +2961,7 @@
       },
       "packages/ui": {
         "dependencies": [
+          "jsr:@hi/utils@0.1",
           "npm:@base-ui/react@^1.0.0-beta.1",
           "npm:class-variance-authority@~0.7.1",
           "npm:lucide-react@0.509",
@@ -2902,6 +2976,10 @@
       },
       "packages/website": {
         "dependencies": [
+          "jsr:@hi/cms@0.1",
+          "jsr:@hi/database@0.1",
+          "jsr:@hi/editor@0.1",
+          "jsr:@hi/render@0.1",
           "npm:react-dom@^19.1.0",
           "npm:react@^19.1.0"
         ]
