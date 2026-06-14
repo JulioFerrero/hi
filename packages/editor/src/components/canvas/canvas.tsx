@@ -32,7 +32,7 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
   const selectElement = useEditorStore((s) => s.selectElement);
   const activePageId = useEditorStore((s) => s.activePageId);
   const activeSiteId = useEditorStore((s) => s.activeSiteId);
-  const { schema, actions, renderer, api } = useEditorContext();
+  const { schema, actions, renderer, api, captureRef } = useEditorContext();
   const { data: session } = useSession();
   const userName = session?.user?.name ?? "";
   const userColor = (session?.user as Record<string, unknown> | undefined)?.cursorColor as string ?? "#7B61FF";
@@ -92,6 +92,13 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
     handleDragStart(type, config?.label ?? type);
   };
 
+  const registerCapture = useCallback(
+    (capture: () => Promise<Blob | null>) => {
+      captureRef.current = { capture };
+    },
+    [captureRef],
+  );
+
   return (
     <div className="absolute inset-0 flex flex-col">
       <div ref={containerRef} className="relative flex-1 overflow-hidden bg-editor-canvas" style={{ cursor: "none" }}>
@@ -99,7 +106,13 @@ export function Canvas({ leftPanelOpen, rightPanelOpen }: { leftPanelOpen: boole
           <div className="relative">
             <div className="flex items-start gap-12 p-8">
               {VIEWPORTS.map((vp) => (
-                <ViewportFrame key={vp} viewport={vp} content={resolvedContent} renderer={renderer} />
+                <ViewportFrame
+                  key={vp}
+                  viewport={vp}
+                  content={resolvedContent}
+                  renderer={renderer}
+                  onRegisterCapture={vp === "desktop" ? registerCapture : undefined}
+                />
               ))}
             </div>
             <div

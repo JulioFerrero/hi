@@ -80,6 +80,14 @@
     "./toolbar": {
       "types": "./dist/components/toolbar.d.ts",
       "import": "./dist/components/toolbar.js"
+    },
+    "./shader-background": {
+      "types": "./dist/components/shader-background.d.ts",
+      "import": "./dist/components/shader-background.js"
+    },
+    "./spotlight-card": {
+      "types": "./dist/components/spotlight-card.d.ts",
+      "import": "./dist/components/spotlight-card.js"
     }
   },
   "scripts": {

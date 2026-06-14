@@ -1,6 +1,7 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Monitor, Tablet, Smartphone } from "lucide-react";
+import { toCanvas } from "html-to-image";
 import type { RenderElement, RendererAdapter, Viewport } from "../../types";
 
 const VIEWPORT_WIDTHS: Record<Viewport, number> = { desktop: 1440, tablet: 768, mobile: 375 };
@@ -22,14 +23,25 @@ function viewportOverrideCSS(h: number) {
   return `.min-h-\\[100dvh\\]{min-height:${h}px!important}.min-h-\\[100vh\\]{min-height:${h}px!important}.h-\\[100dvh\\]{height:${h}px!important}.h-\\[100vh\\]{height:${h}px!important}`;
 }
 
+const PREVIEW_WIDTH = 1440;
+const PREVIEW_HEIGHT = 600;
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/png", 0.92);
+  });
+}
+
 export function ViewportFrame({
   viewport,
   content,
   renderer,
+  onRegisterCapture,
 }: {
   viewport: Viewport;
   content: RenderElement[];
   renderer: RendererAdapter;
+  onRegisterCapture?: (capture: () => Promise<Blob | null>) => void;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeH, setIframeH] = useState(800);
@@ -42,6 +54,58 @@ export function ViewportFrame({
   const pageWidth = VIEWPORT_WIDTHS[viewport];
   const pageViewportH = VIEWPORT_HEIGHTS[viewport];
   const label = VIEWPORT_LABELS[viewport];
+
+  const capturePreview = useCallback(async (): Promise<Blob | null> => {
+    console.log("[preview-capture] capturePreview called");
+    const iframe = iframeRef.current;
+    if (!iframe) {
+      console.warn("[preview-capture] iframe ref is null");
+      return null;
+    }
+    const doc = iframe.contentDocument;
+    if (!doc) {
+      console.warn("[preview-capture] iframe contentDocument is null");
+      return null;
+    }
+    const root = doc.getElementById("canvas-root");
+    if (!root) {
+      console.warn("[preview-capture] canvas-root not found");
+      return null;
+    }
+
+    try {
+      console.log("[preview-capture] calling toCanvas", root.getBoundingClientRect());
+      const fullCanvas = await toCanvas(root, {
+        pixelRatio: 1,
+        cacheBust: true,
+        backgroundColor: "#0a0a0a",
+      });
+      console.log("[preview-capture] toCanvas succeeded", fullCanvas.width, fullCanvas.height);
+
+      const width = Math.min(PREVIEW_WIDTH, fullCanvas.width);
+      const height = Math.min(PREVIEW_HEIGHT, fullCanvas.height);
+      const cropCanvas = document.createElement("canvas");
+      cropCanvas.width = width;
+      cropCanvas.height = height;
+      const ctx = cropCanvas.getContext("2d");
+      if (!ctx) {
+        console.warn("[preview-capture] crop canvas context is null");
+        return null;
+      }
+      ctx.drawImage(fullCanvas, 0, 0, width, height, 0, 0, width, height);
+      const blob = await canvasToBlob(cropCanvas);
+      console.log("[preview-capture] cropped blob", blob?.size, blob?.type);
+      return blob;
+    } catch (err) {
+      console.error("[preview-capture] toCanvas failed", err);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log("[preview-capture] registering capture for viewport", viewport);
+    onRegisterCapture?.(capturePreview);
+  }, [onRegisterCapture, capturePreview, viewport]);
 
   useEffect(() => {
     const iframe = iframeRef.current;

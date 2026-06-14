@@ -154,7 +154,7 @@ export function LeftPanel() {
     }, [ctxMenu, actions, handlePageRename]);
 
   return (
-    <div className="w-[240px] h-full flex flex-col backdrop-blur-[10px] relative select-none rounded-2xl" style={glassStyle}>
+    <div className="w-[240px] h-full flex flex-col backdrop-blur-[10px] select-none rounded-lg" style={glassStyle}>
       <div className="flex flex-col flex-1 overflow-x-hidden">
       <CollapsibleSection title="Pages" icon={File}>
         <div className="px-1 pb-0.5 overflow-x-hidden">

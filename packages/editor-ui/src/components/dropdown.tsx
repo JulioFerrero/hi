@@ -79,7 +79,7 @@ export function Dropdown({
           ? "opacity-100 scale-100 translate-y-0"
           : "opacity-0 scale-95 -translate-y-1",
       )}
-      style={{ zIndex: 9999, ...glassDarkStyle, ...dropdownPos }}
+      style={{ zIndex: 9999, ...dropdownPos, ...glassDarkStyle }}
     >
       {children}
     </div>

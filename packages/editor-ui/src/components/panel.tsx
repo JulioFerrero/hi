@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@vitrea/utils";
-import { glassStyle, glassDarkStyle, glassPanelClass } from "../lib/glass";
+import { glassPanelClass, glassStyle, glassDarkStyle } from "../lib/glass";
 
 export function Panel({
   children,
@@ -12,9 +12,11 @@ export function Panel({
   className?: string;
   variant?: "default" | "dark";
 }) {
-  const style = variant === "dark" ? glassDarkStyle : glassStyle;
   return (
-    <div className={cn(glassPanelClass, className)} style={style}>
+    <div
+      className={cn(glassPanelClass, className)}
+      style={variant === "dark" ? glassDarkStyle : glassStyle}
+    >
       {children}
     </div>
   );

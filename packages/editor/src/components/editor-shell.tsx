@@ -55,28 +55,36 @@ export function EditorShell({ children: _children }: { children?: React.ReactNod
         >
           <LeftPanel />
         </div>
-        <button
-          type="button"
-          onClick={ctx.toggleLeft}
-          className="absolute top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-5 h-20 rounded-r-xl backdrop-blur-[10px] text-white hover:text-white hover:bg-white/10 transition-all duration-200"
+        <div
+          className="absolute top-1/2 -translate-y-1/2 z-50 w-5 h-20 rounded-r-xl"
           style={{ left: leftOpen ? 252 : 12, ...glassStyle }}
         >
-          <DotsIcon />
-        </button>
+          <button
+            type="button"
+            onClick={ctx.toggleLeft}
+            className="flex h-full w-full items-center justify-center text-white hover:text-white hover:bg-white/10 transition-all duration-200"
+          >
+            <DotsIcon />
+          </button>
+        </div>
         <div
           className="absolute right-3 top-[70px] bottom-3 z-30 transition-transform duration-200 ease-in-out"
           style={{ transform: rightOpen ? "translateX(0)" : "translateX(100%)" }}
         >
           <RightPanel />
         </div>
-        <button
-          type="button"
-          onClick={ctx.toggleRight}
-          className="absolute top-1/2 -translate-y-1/2 z-50 flex items-center justify-center w-5 h-20 rounded-l-xl backdrop-blur-[10px] text-white hover:text-white hover:bg-white/10 transition-all duration-200"
+        <div
+          className="absolute top-1/2 -translate-y-1/2 z-50 w-5 h-20 rounded-l-xl"
           style={{ right: rightOpen ? 252 : 12, ...glassStyle }}
         >
-          <DotsIcon />
-        </button>
+          <button
+            type="button"
+            onClick={ctx.toggleRight}
+            className="flex h-full w-full items-center justify-center text-white hover:text-white hover:bg-white/10 transition-all duration-200"
+          >
+            <DotsIcon />
+          </button>
+        </div>
       </div>
     </PanelContext.Provider>
   );

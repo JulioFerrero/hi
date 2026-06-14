@@ -1,7 +1,12 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo, useRef } from "react";
+import type React from "react";
 import type { EditorSchema, EditorApi, RendererAdapter } from "../types";
 import type { EditorActions } from "../lib/actions";
 import { createEditorActions } from "../lib/actions";
+
+export interface PreviewCaptureHandle {
+  capture: () => Promise<Blob | null>;
+}
 
 const EditorContext = createContext<{
   siteId: string;
@@ -9,6 +14,7 @@ const EditorContext = createContext<{
   api: EditorApi;
   renderer: RendererAdapter;
   actions: EditorActions;
+  captureRef: React.RefObject<PreviewCaptureHandle>;
 } | null>(null);
 
 const CmsContext = createContext<{
@@ -56,10 +62,11 @@ export function EditorProvider({
   renderer: RendererAdapter;
   children: React.ReactNode;
 }) {
-  const actions = useMemo(() => createEditorActions(api, schema), [api, schema]);
+  const captureRef = useRef<PreviewCaptureHandle>({ capture: async () => null });
+  const actions = useMemo(() => createEditorActions(api, schema, captureRef), [api, schema]);
 
   return (
-    <EditorContext.Provider value={{ siteId, schema, api, renderer, actions }}>
+    <EditorContext.Provider value={{ siteId, schema, api, renderer, actions, captureRef }}>
       {children}
     </EditorContext.Provider>
   );

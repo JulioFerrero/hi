@@ -5,6 +5,7 @@ import { db, sites, pages, siteMembers } from "@vitrea/database";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { getById, updateById, deleteById } from "./helpers";
+import { uploadFile, deleteFile, extractKeyFromUrl } from "../../lib/storage";
 import { createElement } from "@vitrea/render";
 import type { PageElement } from "@vitrea/render";
 import type { AuthVariables } from "@vitrea/auth/middleware";
@@ -257,6 +258,33 @@ export const sitesRoute = new Hono<{ Variables: AuthVariables }>()
       return c.json(row);
     }
   )
+  .post("/:id/preview", async (c) => {
+    console.log("[preview-capture] API /sites/:id/preview hit", c.req.param("id"));
+    const id = c.req.param("id");
+    const [existing] = await db.select().from(sites).where(eq(sites.id, id)).limit(1);
+    if (!existing) return c.json({ error: "Not found" }, 404);
+
+    const body = await c.req.parseBody();
+    const file = body.file;
+    console.log("[preview-capture] parsed file", file?.constructor?.name, (file as File | undefined)?.size);
+    if (!file || !(file instanceof File)) {
+      return c.json({ error: "Missing image file" }, 400);
+    }
+
+    const previousUrl = (existing.data as SiteData | null)?.previewImage;
+    if (previousUrl) {
+      const key = extractKeyFromUrl(previousUrl);
+      if (key) await deleteFile(key).catch(() => {});
+    }
+
+    const uploaded = await uploadFile(file, { key: `site-previews/${id}.png` });
+    console.log("[preview-capture] uploaded to", uploaded.url);
+    const updated = await updateById(sites, id, {
+      data: { ...(existing.data as SiteData), previewImage: uploaded.url } as SiteData,
+    });
+
+    return c.json(updated, 200);
+  })
   .delete("/:id", async (c) => {
     const row = await deleteById(sites, c.req.param("id"));
     if (!row) return c.json({ error: "Not found" }, 404);

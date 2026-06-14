@@ -23,8 +23,8 @@ export function RightPanel() {
 
   if (!selected) {
     return (
-      <div className="w-[240px] h-full flex flex-col backdrop-blur-[10px] relative rounded-2xl" style={glassStyle}>
-        {activePage ? (
+    <div className="w-[240px] h-full flex flex-col backdrop-blur-[10px] rounded" style={glassStyle}>
+      {activePage ? (
           <>
             <SectionLabel>Page</SectionLabel>
             <div className="px-3 pb-2 space-y-3">
@@ -88,7 +88,7 @@ export function RightPanel() {
   };
 
   return (
-    <div className="w-[240px] h-full flex flex-col backdrop-blur-[10px] relative rounded-2xl" style={glassStyle}>
+    <div className="w-[240px] h-full flex flex-col backdrop-blur-[10px] rounded" style={glassStyle}>
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.06]">
         <span className="text-[11px] font-semibold capitalize text-white">{typeConfig?.label ?? selected.type}</span>
         <div className="flex items-center gap-0.5">

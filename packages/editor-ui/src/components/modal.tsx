@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@vitrea/utils";
-import { glassDarkStyle, overlayStyle } from "../lib/glass";
+import { overlayStyle, glassDarkStyle } from "../lib/glass";
 
 export function Modal({
   open,
@@ -53,7 +53,7 @@ export function Modal({
           animIn ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-[0.98] translate-y-1",
           className,
         )}
-        style={variant === "default" ? glassDarkStyle : undefined}
+        style={variant === "flat" ? undefined : glassDarkStyle}
         onClick={(e) => e.stopPropagation()}
       >
         <button

@@ -217,6 +217,7 @@ export const siteMembersRelations = relations(siteMembers, ({ one }) => ({
 export type SiteData = {
   name: string;
   domain?: string;
+  previewImage?: string;
   settings?: {
     favicon?: string;
     primaryColor?: string;

@@ -7,12 +7,14 @@ import { ChevronDown, User, LogOut } from "lucide-react";
 import { EditProfileModal } from "./edit-profile-modal";
 import { Dropdown, DropdownItem, DropdownHeader } from "@vitrea/editor-ui/dropdown";
 
-export function ProfileDropdown() {
+export function ProfileDropdown({ variant = "dark" }: { variant?: "dark" | "light" }) {
   const { data: session } = useSession();
   const user = session?.user;
   const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   if (!user) return null;
+
+  const isLight = variant === "light";
 
   const initials = (user.name ?? "?")
     .split(" ")
@@ -26,18 +28,19 @@ export function ProfileDropdown() {
       type="button"
       className={cn(
         "flex items-center gap-2 rounded-full p-0.5 pr-2 transition-all duration-150",
-        "border border-white/[0.06] hover:border-white/[0.12]",
-        "bg-white/[0.02] hover:bg-white/[0.04]",
+        isLight
+          ? "border border-black/[0.08] hover:border-black/[0.15] bg-black/[0.03] hover:bg-black/[0.06]"
+          : "border border-white/[0.06] hover:border-white/[0.12] bg-white/[0.02] hover:bg-white/[0.04]",
       )}
     >
-      <div className="h-7 w-7 rounded-full overflow-hidden flex items-center justify-center bg-white/[0.06]">
+      <div className={cn("h-7 w-7 rounded-full overflow-hidden flex items-center justify-center", isLight ? "bg-black/[0.06]" : "bg-white/[0.06]")}>
         {user.image ? (
           <img src={user.image} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="text-[11px] font-medium text-white/80">{initials}</span>
+          <span className={cn("text-[11px] font-medium", isLight ? "text-black/80" : "text-white/80")}>{initials}</span>
         )}
       </div>
-      <ChevronDown className="h-3 w-3 text-white" />
+      <ChevronDown className={cn("h-3 w-3", isLight ? "text-gray-700" : "text-white")} />
     </button>
   );
 

@@ -16,3 +16,5 @@ export { Avatar } from "./components/avatar";
 export { CollapsibleSection } from "./components/collapsible-section";
 export { Panel } from "./components/panel";
 export { Toolbar } from "./components/toolbar";
+export { ShaderBackground } from "./components/shader-background";
+export { SpotlightCard } from "./components/spotlight-card";
